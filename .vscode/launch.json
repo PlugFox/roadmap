@@ -8,7 +8,10 @@
             "request": "launch",
             "flutterMode": "debug",
             "cwd": "${workspaceFolder}",
-            "args": [],
+            "args": [
+                "--verbose",
+                "--no-release",
+            ],
             "env": {}
         },
         {
@@ -18,7 +21,9 @@
             "request": "launch",
             "flutterMode": "release",
             "cwd": "${workspaceFolder}",
-            "args": [],
+            "args": [
+                "--release",
+            ],
             "env": {}
         },
         {

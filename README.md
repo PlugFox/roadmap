@@ -1,6 +1,6 @@
 # Flutter Developer Roadmap
 
-## Hot to start
+## How to start
 
 Install dart
 
@@ -22,3 +22,7 @@ Serve the project
 ```bash
 webdev serve
 ```
+
+## How to WASM
+
+[Dart 2 WASM](https://dart.dev/web/wasm)
