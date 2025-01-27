@@ -9,8 +9,10 @@ class RenderContext {
   RenderContext._({
     required int width,
     required int height,
-    required this.canvas,
-    required this.gl,
+    required this.canvasGL,
+    required this.ctxGL,
+    required this.canvasUI,
+    required this.ctx2D,
     required this.resources,
   })  : _width = width,
         _height = height;
@@ -23,11 +25,17 @@ class RenderContext {
   int get height => _height;
   int _height;
 
-  /// Canvas element.
-  final HTMLCanvasElement canvas;
+  /// WebGL canvas for rendering shaders.
+  final HTMLCanvasElement canvasGL;
 
-  /// WebGL context.
-  final WebGL2RenderingContext gl;
+  /// WebGL2 context.
+  final WebGL2RenderingContext ctxGL;
+
+  /// 2D canvas for rendering UI.
+  final HTMLCanvasElement canvasUI;
+
+  /// 2D context.
+  final CanvasRenderingContext2D ctx2D;
 
   /// Resources for rendering, such as textures, shaders and buffers.
   final Map<String, Object?> resources;
@@ -80,16 +88,17 @@ class RenderingEngine {
   static RenderingEngine get instance => _instance ??= () {
         final layers = <Layer>[];
         // Initialize WebGL Canvas
-        final canvas = document.createElement('canvas') as HTMLCanvasElement
-          ..id = 'webgl-canvas'
+        final canvasGL = document.createElement('canvas') as HTMLCanvasElement
+          ..id = 'gl-canvas'
           ..width = window.innerWidth
-          ..height = window.innerHeight;
-        //..style.position = 'absolute'
-        //..style.top = '0'
-        //..style.left = '0'
-        //..style.pointerEvents = 'none';
+          ..height = window.innerHeight
+          ..style.position = 'absolute'
+          ..style.top = '0'
+          ..style.left = '0'
+          ..style.zIndex = '0';
+
         // Get WebGL context with alpha for transparency
-        final gl = canvas.getContext(
+        final ctxGL = canvasGL.getContext(
           'webgl2',
           <String, Object?>{
             'alpha': false,
@@ -99,14 +108,36 @@ class RenderingEngine {
             'preserveDrawingBuffer': false,
           }.jsify(),
         ) as WebGL2RenderingContext;
-        document.body?.append(canvas);
+        // Initialize 2D Canvas
+        final canvasUI = document.createElement('canvas') as HTMLCanvasElement
+          ..id = 'ui-canvas'
+          ..width = window.innerWidth
+          ..height = window.innerHeight
+          ..style.position = 'absolute'
+          ..style.top = '0'
+          ..style.left = '0'
+          ..style.zIndex = '1';
+
+        final ctx2D = canvasUI.getContext(
+          '2d',
+          <String, Object?>{
+            'alpha': true,
+            'willReadFrequently': false,
+          }.jsify(),
+        ) as CanvasRenderingContext2D;
+        // Append canvases to the body
+        document.body
+          ?..append(canvasGL)
+          ..append(canvasUI);
         final engine = RenderingEngine._(
           layers: layers,
           context: RenderContext._(
             width: window.innerWidth,
             height: window.innerHeight,
-            canvas: canvas,
-            gl: gl,
+            canvasGL: canvasGL,
+            ctxGL: ctxGL,
+            canvasUI: canvasUI,
+            ctx2D: ctx2D,
             resources: <String, Object>{},
           ),
         );
@@ -133,7 +164,10 @@ class RenderingEngine {
     _context
       .._width = width
       .._height = height;
-    _context.canvas
+    _context.canvasGL
+      ..width = width
+      ..height = height;
+    _context.canvasUI
       ..width = width
       ..height = height;
     // Notify layers about resize
@@ -197,7 +231,9 @@ class RenderingEngine {
     stop();
     for (final layer in _layers) layer.unmount(_context);
     _layers.clear();
-    _context.canvas.remove();
+    _context
+      ..canvasGL.remove()
+      ..canvasUI.remove();
     _isClosed = true;
     _instance = null;
   }

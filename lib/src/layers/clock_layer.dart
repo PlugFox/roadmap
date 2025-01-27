@@ -4,6 +4,7 @@ import 'dart:js_interop';
 import 'dart:math' as math;
 import 'dart:typed_data' as td;
 
+import 'package:intl/intl.dart' as intl;
 import 'package:roadmap/src/core/engine.dart';
 import 'package:web/web.dart';
 
@@ -41,7 +42,7 @@ class ClockLayer implements ResizableLayer {
   void _initializeGL(RenderContext context) {
     if (_initialized) return;
 
-    final gl = context.gl;
+    final gl = context.ctxGL;
 
     // Vertex shader для позиции и цвета
     final vertexShader = gl.createShader(WebGL2RenderingContext.VERTEX_SHADER)!;
@@ -93,7 +94,7 @@ class ClockLayer implements ResizableLayer {
 
   /// Рисует линии на экране
   void _drawLines(RenderContext context, td.Float32List vertices, td.Float32List colors) {
-    final gl = context.gl;
+    final gl = context.ctxGL;
 
     // Устанавливаем вершины
     gl.bindBuffer(WebGL2RenderingContext.ARRAY_BUFFER, _vertexBuffer);
@@ -160,42 +161,52 @@ class ClockLayer implements ResizableLayer {
     _width = width;
     _height = height;
     _updateDimensions();
+    _updateTimeVertices();
   }
 
   td.Float32List _hourVertices = td.Float32List(4),
       _minuteVertices = td.Float32List(4),
       _secondVertices = td.Float32List(4);
 
+  void _updateTimeVertices() {
+    final now = DateTime.now();
+    final hours = now.hour % 12;
+    final minutes = now.minute;
+    final seconds = now.second;
+
+    final hourAngle = (hours + minutes / 60) * 2 * math.pi / 12 - math.pi / 2;
+    final minuteAngle = minutes * 2 * math.pi / 60 - math.pi / 2;
+    final secondAngle = seconds * 2 * math.pi / 60 - math.pi / 2;
+
+    _hourVertices = _createHandVertices(hourAngle, _radius * 0.5);
+    _minuteVertices = _createHandVertices(minuteAngle, _radius * 0.7);
+    _secondVertices = _createHandVertices(secondAngle, _radius * 0.8);
+  }
+
   @override
   void update(RenderContext context, double delta) {
     // Обновляем стрелки часов, минут и секунд если изменилось время
     final now = DateTime.now();
-    if (now.hour != _now.hour) {
-      final hours = now.hour % 12;
-      final minutes = now.minute;
-      final hourAngle = (hours + minutes / 60) * 2 * math.pi / 12 - math.pi / 2;
-      _hourVertices = _createHandVertices(hourAngle, _radius * 0.5);
-    }
-    if (now.minute != _now.minute) {
-      final minutes = now.minute;
-      final minuteAngle = minutes * 2 * math.pi / 60 - math.pi / 2;
-      _minuteVertices = _createHandVertices(minuteAngle, _radius * 0.7);
-    }
-    if (now.second != _now.second) {
-      final seconds = now.second;
-      final secondAngle = seconds * 2 * math.pi / 60 - math.pi / 2;
-      _secondVertices = _createHandVertices(secondAngle, _radius * 0.8);
-    }
+    if (now.second != _now.second || now.minute != _now.minute || now.hour != _now.hour) _updateTimeVertices();
     _now = now;
   }
 
   @override
   void render(RenderContext context, double delta) {
-    final gl = context.gl;
+    final gl = context.ctxGL;
 
     // Очищаем и подготавливаем GL
     gl.viewport(0, 0, _width, _height);
+    //gl.clearColor(0.1, 0.1, 0.1, 1.0); // Фон WebGL
     gl.clear(WebGL2RenderingContext.COLOR_BUFFER_BIT);
+
+    // Прорисовываем текст
+    context.ctx2D
+      ..clearRect(0, 0, context.width, context.height)
+      ..font = '32px Arial'
+      ..fillStyle = 'white'.toJS
+      ..fillText(intl.DateFormat('HH:mm:ss').format(_now), 50, 100);
+
     gl.useProgram(_program);
     gl.uniform2f(_resolutionLocation, _width.toDouble(), _height.toDouble());
 
@@ -231,7 +242,7 @@ class ClockLayer implements ResizableLayer {
   @override
   void unmount(RenderContext context) {
     if (_initialized) {
-      final gl = context.gl;
+      final gl = context.ctxGL;
       gl.deleteProgram(_program);
       gl.deleteBuffer(_vertexBuffer);
       gl.deleteBuffer(_colorBuffer);
