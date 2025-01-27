@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:roadmap/src/core/engine.dart';
@@ -16,7 +15,7 @@ void runApp() {
 }
 
 void _initialize() {
-  final now = DateTime.now();
+  /* final now = DateTime.now();
   final element = document.querySelector('#output') as HTMLElement
     ..text = 'The time is ${now.hour}:${now.minute} '
         'and your Dart web app is running!';
@@ -24,9 +23,17 @@ void _initialize() {
     final now = DateTime.now();
     element.text = 'The time is ${now.hour}:${now.minute}:${now.second} '
         'and your Dart web app is running!';
-  });
+  }); */
 
   final engine = RenderingEngine.instance
     ..addLayer(ClockLayer())
     ..start();
+
+  // Initialization ...
+  // Skills ...
+  // Minimap ...
+  // UI Search ...
+  // UI Buttons ...
+  // UI Tooltips ...
+  // UI Skill ...
 }
