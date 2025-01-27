@@ -25,23 +25,18 @@ class ClockLayer implements ResizableLayer {
   late double _radius;
 
   /// Римские цифры для часов
-  static const List<String> _romanNumerals = [
-    'XII',
-    'I',
-    'II',
-    'III',
-    'IV',
-    'V',
-    'VI',
-    'VII',
-    'VIII',
-    'IX',
-    'X',
-    'XI',
-  ];
+  static const int _circleSegments = 24;
+  static const List<String> _romanNumerals = ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+  static final td.Float32List _hourColors = td.Float32List.fromList(<double>[0, 0, 1, 1, 0, 0, 1, 1]); // Синий цвет
+  static final td.Float32List _minuteColors = td.Float32List.fromList(<double>[0, 1, 0, 1, 0, 1, 0, 1]); // Зеленый цвет
+  static final td.Float32List _secondColors = td.Float32List.fromList(<double>[1, 0, 0, 1, 1, 0, 0, 1]); // Красный цвет
+  static final td.Float32List _markColors = td.Float32List.fromList(<double>[0.5, 0.5, 0.5, 1, 0.5, 0.5, 0.5, 1]);
+  static final td.Float32List _circleColors = td.Float32List.fromList(List.filled(_circleSegments ~/ 2 * 4 * 4, 1));
 
   @override
   bool get isVisible => true;
+
+  DateTime _now = DateTime(0);
 
   void _initializeGL(RenderContext context) {
     if (_initialized) return;
@@ -96,14 +91,15 @@ class ClockLayer implements ResizableLayer {
     _initialized = true;
   }
 
-  void _drawLines(RenderContext context, List<double> vertices, List<double> colors) {
+  /// Рисует линии на экране
+  void _drawLines(RenderContext context, td.Float32List vertices, td.Float32List colors) {
     final gl = context.gl;
 
     // Устанавливаем вершины
     gl.bindBuffer(WebGL2RenderingContext.ARRAY_BUFFER, _vertexBuffer);
     gl.bufferData(
       WebGL2RenderingContext.ARRAY_BUFFER,
-      td.Float32List.fromList(vertices).toJS,
+      vertices.toJS,
       WebGL2RenderingContext.STATIC_DRAW,
     );
     gl.enableVertexAttribArray(_positionLocation);
@@ -113,7 +109,7 @@ class ClockLayer implements ResizableLayer {
     gl.bindBuffer(WebGL2RenderingContext.ARRAY_BUFFER, _colorBuffer);
     gl.bufferData(
       WebGL2RenderingContext.ARRAY_BUFFER,
-      td.Float32List.fromList(colors).toJS,
+      colors.toJS,
       WebGL2RenderingContext.STATIC_DRAW,
     );
     gl.enableVertexAttribArray(_colorLocation);
@@ -123,26 +119,25 @@ class ClockLayer implements ResizableLayer {
     gl.drawArrays(WebGL2RenderingContext.LINES, 0, vertices.length ~/ 2);
   }
 
-  List<double> _createHandVertices(double angle, double length) => [
-        _centerX,
-        _centerY,
-        _centerX + length * math.cos(angle),
-        _centerY + length * math.sin(angle),
-      ];
+  /// Создает вершины для стрелок часов
+  td.Float32List _createHandVertices(double angle, double length) => td.Float32List(4)
+    ..[0] = _centerX // Начальная точка (центр циферблата)
+    ..[1] = _centerY // Начальная точка (центр циферблата)
+    ..[2] = _centerX + length * math.cos(angle) // Конечная точка (конец стрелки)
+    ..[3] = _centerY + length * math.sin(angle); // Конечная точка (конец стрелки)
 
-  List<double> _createCircleVertices(int segments) {
-    final vertices = <double>[];
+  /// Создает вершины для циферблата
+  td.Float32List _createCircleVertices(int segments) {
+    final vertices = td.Float32List(segments * 4);
 
     for (var i = 0; i < segments; i++) {
       final angle1 = i * 2 * math.pi / segments;
       final angle2 = (i + 1) * 2 * math.pi / segments;
-
-      vertices.addAll([
-        _centerX + _radius * math.cos(angle1),
-        _centerY + _radius * math.sin(angle1),
-        _centerX + _radius * math.cos(angle2),
-        _centerY + _radius * math.sin(angle2),
-      ]);
+      vertices
+        ..[i * 4 + 0] = _centerX + _radius * math.cos(angle1)
+        ..[i * 4 + 1] = _centerY + _radius * math.sin(angle1)
+        ..[i * 4 + 2] = _centerX + _radius * math.cos(angle2)
+        ..[i * 4 + 3] = _centerY + _radius * math.sin(angle2);
     }
 
     return vertices;
@@ -167,8 +162,32 @@ class ClockLayer implements ResizableLayer {
     _updateDimensions();
   }
 
+  td.Float32List _hourVertices = td.Float32List(4),
+      _minuteVertices = td.Float32List(4),
+      _secondVertices = td.Float32List(4);
+
   @override
-  void update(RenderContext context, double delta) {}
+  void update(RenderContext context, double delta) {
+    // Обновляем стрелки часов, минут и секунд если изменилось время
+    final now = DateTime.now();
+    if (now.hour != _now.hour) {
+      final hours = now.hour % 12;
+      final minutes = now.minute;
+      final hourAngle = (hours + minutes / 60) * 2 * math.pi / 12 - math.pi / 2;
+      _hourVertices = _createHandVertices(hourAngle, _radius * 0.5);
+    }
+    if (now.minute != _now.minute) {
+      final minutes = now.minute;
+      final minuteAngle = minutes * 2 * math.pi / 60 - math.pi / 2;
+      _minuteVertices = _createHandVertices(minuteAngle, _radius * 0.7);
+    }
+    if (now.second != _now.second) {
+      final seconds = now.second;
+      final secondAngle = seconds * 2 * math.pi / 60 - math.pi / 2;
+      _secondVertices = _createHandVertices(secondAngle, _radius * 0.8);
+    }
+    _now = now;
+  }
 
   @override
   void render(RenderContext context, double delta) {
@@ -181,33 +200,17 @@ class ClockLayer implements ResizableLayer {
     gl.uniform2f(_resolutionLocation, _width.toDouble(), _height.toDouble());
 
     // Рисуем циферблат (окружность)
-    final circleVertices = _createCircleVertices(60);
-    final circleColors = List<double>.filled(circleVertices.length ~/ 2 * 4, 1);
-    _drawLines(context, circleVertices, circleColors);
-
-    // Получаем текущее время
-    final now = DateTime.now();
-    final hours = now.hour % 12;
-    final minutes = now.minute;
-    final seconds = now.second;
+    final circleVertices = _createCircleVertices(_circleSegments);
+    _drawLines(context, circleVertices, _circleColors);
 
     // Рисуем часовую стрелку
-    final hourAngle = (hours + minutes / 60) * 2 * math.pi / 12 - math.pi / 2;
-    final hourVertices = _createHandVertices(hourAngle, _radius * 0.5);
-    final hourColors = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0]; // Синий цвет
-    _drawLines(context, hourVertices, hourColors);
+    _drawLines(context, _hourVertices, _hourColors);
 
     // Рисуем минутную стрелку
-    final minuteAngle = minutes * 2 * math.pi / 60 - math.pi / 2;
-    final minuteVertices = _createHandVertices(minuteAngle, _radius * 0.7);
-    final minuteColors = [0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0]; // Зеленый цвет
-    _drawLines(context, minuteVertices, minuteColors);
+    _drawLines(context, _minuteVertices, _minuteColors);
 
     // Рисуем секундную стрелку
-    final secondAngle = seconds * 2 * math.pi / 60 - math.pi / 2;
-    final secondVertices = _createHandVertices(secondAngle, _radius * 0.8);
-    final secondColors = [1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]; // Красный цвет
-    _drawLines(context, secondVertices, secondColors);
+    _drawLines(context, _secondVertices, _secondColors);
 
     // Рисуем деления часов
     for (var i = 0; i < 12; i++) {
@@ -215,16 +218,13 @@ class ClockLayer implements ResizableLayer {
       final outerRadius = _radius;
       final innerRadius = _radius * 0.9;
 
-      final markVertices = [
-        _centerX + innerRadius * math.cos(angle),
-        _centerY + innerRadius * math.sin(angle),
-        _centerX + outerRadius * math.cos(angle),
-        _centerY + outerRadius * math.sin(angle),
-      ];
+      final markVertices = td.Float32List(4)
+        ..[0] = _centerX + innerRadius * math.cos(angle)
+        ..[1] = _centerY + innerRadius * math.sin(angle)
+        ..[2] = _centerX + outerRadius * math.cos(angle)
+        ..[3] = _centerY + outerRadius * math.sin(angle);
 
-      // Серый цвет
-      final markColors = [0.5, 0.5, 0.5, 1.0, 0.5, 0.5, 0.5, 1.0];
-      _drawLines(context, markVertices, markColors);
+      _drawLines(context, markVertices, _markColors);
     }
   }
 
