@@ -1,7 +1,9 @@
 // ignore_for_file: prefer_constructors_over_static_methods
 
+import 'dart:async';
 import 'dart:js_interop';
 
+import 'package:l/l.dart';
 import 'package:web/web.dart';
 
 // Rendering context
@@ -77,21 +79,50 @@ abstract interface class ResizableLayer implements Layer {
 /// Rendering engine that manages layers and rendering.
 class RenderingEngine {
   RenderingEngine._({
+    required ShadowRoot shadow,
+    required HTMLDivElement container,
     required List<Layer> layers,
     required RenderContext context,
-  })  : _layers = layers,
+  })  : _shadow = shadow,
+        _container = container,
+        _layers = layers,
         _context = context;
 
   static RenderingEngine? _instance;
 
   /// Singleton instance of the rendering engine.
   static RenderingEngine get instance => _instance ??= () {
+        final app = document.querySelector('#app');
+        if (app == null) throw StateError('Failed to find app element');
+        final children = app.children;
+        for (var i = children.length - 1; i >= 0; i--) children.item(i)!.remove();
+
+        final shadow = app.attachShadow(ShadowRootInit(
+          mode: 'open',
+          clonable: false,
+          serializable: false,
+          delegatesFocus: false,
+          slotAssignment: 'manual',
+        ));
+
+        final container = HTMLDivElement()
+          ..id = 'engine'
+          ..style.position = 'fixed'
+          ..style.top = '0'
+          ..style.left = '0'
+          ..style.width = '100%'
+          ..style.height = '100%'
+          ..style.overflow = 'hidden';
+
+        final width = window.innerWidth;
+        final height = window.innerHeight;
+
         final layers = <Layer>[];
         // Initialize WebGL Canvas
         final canvasGL = document.createElement('canvas') as HTMLCanvasElement
           ..id = 'gl-canvas'
-          ..width = window.innerWidth
-          ..height = window.innerHeight
+          ..width = width
+          ..height = height
           ..style.position = 'absolute'
           ..style.top = '0'
           ..style.left = '0'
@@ -111,8 +142,8 @@ class RenderingEngine {
         // Initialize 2D Canvas
         final canvasUI = document.createElement('canvas') as HTMLCanvasElement
           ..id = 'ui-canvas'
-          ..width = window.innerWidth
-          ..height = window.innerHeight
+          ..width = width
+          ..height = height
           ..style.position = 'absolute'
           ..style.top = '0'
           ..style.left = '0'
@@ -126,14 +157,16 @@ class RenderingEngine {
           }.jsify(),
         ) as CanvasRenderingContext2D;
         // Append canvases to the body
-        document.body
-          ?..append(canvasGL)
-          ..append(canvasUI);
+        shadow.append(container
+          ..append(canvasGL)
+          ..append(canvasUI));
         final engine = RenderingEngine._(
+          shadow: shadow,
+          container: container,
           layers: layers,
           context: RenderContext._(
-            width: window.innerWidth,
-            height: window.innerHeight,
+            width: width,
+            height: height,
             canvasGL: canvasGL,
             ctxGL: ctxGL,
             canvasUI: canvasUI,
@@ -141,13 +174,11 @@ class RenderingEngine {
             resources: <String, Object>{},
           ),
         );
-
-        window.onresize = () {
-          engine._onResize(window.innerWidth, window.innerHeight);
-        }.toJS;
         return engine;
       }();
 
+  final ShadowRoot _shadow;
+  final HTMLDivElement _container;
   final List<Layer> _layers;
 
   bool _isClosed = false;
@@ -157,10 +188,13 @@ class RenderingEngine {
   // Rendering context
   final RenderContext _context;
 
+  Timer? _healthCehckTimer;
+
   /// Resize the rendering engine.
   void _onResize(int width, int height) {
     if (_isClosed) return;
     if (_context.width == width && _context.height == height) return;
+    l.d('Resize to $width x $height');
     _context
       .._width = width
       .._height = height;
@@ -177,6 +211,10 @@ class RenderingEngine {
       }
     }
   }
+
+  late final JSExportedDartFunction _onResizeJS = ((Event event) {
+    _onResize(window.innerWidth, window.innerHeight);
+  }).toJS;
 
   /// Add a layer to the rendering engine.
   void addLayer(Layer layer) {
@@ -210,20 +248,56 @@ class RenderingEngine {
         ..render(_context, deltaTime);
     }
 
-    window.requestAnimationFrame(_renderFrame.toJS);
+    window.requestAnimationFrame(_renderFrameJS);
   }
+
+  late final JSExportedDartFunction _renderFrameJS = _renderFrame.toJS;
 
   /// Start the rendering engine.
   void start() {
     if (_isRunning) return;
+
+    final container = _container;
+
+    /* final width = container.clientWidth;
+    final height = container.clientHeight;
+    _resizeObserver?.disconnect();
+    _resizeObserver = ResizeObserver(
+      (JSArray<ResizeObserverEntry> entries) {
+        if (!container.isConnected) {
+          stop();
+          return;
+        }
+        final length = entries.length;
+        for (var i = 0; i < length; i++) {
+          final DOMRectReadOnly(:width, :height) = entries[i].contentRect;
+          _onResize(width.round(), height.round());
+        }
+      }.toJS,
+    )..observe(container, ResizeObserverOptions(box: 'content-box')); */
+
+    window.addEventListener('resize', _onResizeJS);
+
+    // Health check
+    _healthCehckTimer?.cancel();
+    _healthCehckTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_isClosed) timer.cancel();
+      if (container.isConnected) return;
+      l.w('Engine container is not connected');
+      dispose();
+    });
+
+    // Start rendering
     _isRunning = true;
     _lastFrameTime = window.performance.now();
-    window.requestAnimationFrame(_renderFrame.toJS);
+    window.requestAnimationFrame(_renderFrameJS);
   }
 
   /// Stop the rendering engine.
   void stop() {
     _isRunning = false;
+    window.removeEventListener('resize', _onResizeJS);
+    _healthCehckTimer?.cancel();
   }
 
   /// Dispose the rendering engine.
@@ -234,6 +308,12 @@ class RenderingEngine {
     _context
       ..canvasGL.remove()
       ..canvasUI.remove();
+    final app = document.querySelector('#app');
+    if (app != null) {
+      app.removeChild(_shadow);
+      final children = app.children;
+      for (var i = children.length - 1; i >= 0; i--) children.item(i)!.remove();
+    }
     _isClosed = true;
     _instance = null;
   }

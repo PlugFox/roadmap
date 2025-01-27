@@ -61,6 +61,7 @@ dependencies:
 
   # Annotation
   #json_annotation: ^4.9.0
+  l: ^5.0.0
   meta: any
 
   # Utility

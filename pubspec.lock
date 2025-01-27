@@ -302,6 +302,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.9.0"
+  l:
+    dependency: "direct main"
+    description:
+      name: l
+      sha256: "4f4c5a88028cd052e0840e7420f57fbf2a32fb945c45355db7bacb70bfa94a9f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.0"
   lints:
     dependency: "direct dev"
     description:

@@ -1,18 +1,23 @@
-import 'dart:js_interop';
+import 'dart:async';
 
+import 'package:l/l.dart';
 import 'package:roadmap/src/core/engine.dart';
 import 'package:roadmap/src/layers/clock_layer.dart';
-import 'package:web/web.dart';
 
-void runApp() {
-  // Check if document is already complete
-  if (document.readyState == 'complete') {
-    _initialize();
-  } else {
-    // Wait for document to be ready
-    document.onreadystatechange = _initialize.toJS;
-  }
-}
+void runApp() => l.capture(
+      () => runZonedGuarded<void>(
+        _initialize,
+        l.e,
+      ),
+      LogOptions(
+        outputInRelease: true,
+        handlePrint: true,
+        printColors: false,
+        output: LogOutput.platform,
+        overrideOutput: (message) => '[${message.level}] ${message.message}',
+        messageFormatting: (message) => message,
+      ),
+    );
 
 void _initialize() {
   /* final now = DateTime.now();
@@ -28,6 +33,8 @@ void _initialize() {
   final engine = RenderingEngine.instance
     ..addLayer(ClockLayer())
     ..start();
+
+  l.i('Engine started');
 
   // Initialization ...
   // Skills ...
