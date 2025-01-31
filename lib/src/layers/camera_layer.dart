@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
 
-import 'package:l/l.dart';
 import 'package:roadmap/src/core/camera.dart';
 import 'package:roadmap/src/core/engine.dart';
 import 'package:roadmap/src/core/geometry.dart';
@@ -124,7 +123,7 @@ class CameraLayer implements Layer {
       _isDragging = false;
       event.preventDefault();
       //event.stopPropagation();
-      l.i('Mouse up');
+      //l.i('Mouse up');
     }, cancelOnError: false);
 
     // Wheel events
@@ -144,7 +143,7 @@ class CameraLayer implements Layer {
         );
         if (offset == Offset.zero) return;
         //if (offset.distanceSquared < 1) return;
-        l.i('Wheel: ${event.deltaX}, ${event.deltaY}');
+        //l.i('Wheel: ${event.deltaX}, ${event.deltaY}');
         camera.moveTo(camera.position + offset);
         event.preventDefault();
         //event.stopPropagation();
@@ -154,7 +153,7 @@ class CameraLayer implements Layer {
     _onTouchMoveSubscription?.cancel();
     _onTouchMoveSubscription = EventStreamProviders.touchMoveEvent.forTarget(window).listen((event) {
       if (event.touches.length == 0) return;
-      l.i('Touch move: ${event.touches.length}');
+      //l.i('Touch move: ${event.touches.length}');
       event.preventDefault();
     }, cancelOnError: false);
   }

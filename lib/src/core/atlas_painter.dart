@@ -1,7 +1,52 @@
 import 'dart:js_interop';
+import 'dart:math' as math;
 import 'dart:typed_data';
 
+import 'package:l/l.dart';
 import 'package:web/web.dart' as web;
+
+enum MipmapQuality { none, low, medium, high }
+
+/// Enhanced configuration for AtlasPainter
+class AtlasPainterConfig {
+  const AtlasPainterConfig({
+    this.enableBatching = true,
+    this.maxBatchSize = 1000,
+    this.premultiplyAlpha = true,
+    this.mipmapQuality = MipmapQuality.none,
+    this.debugMode = false,
+    this.performanceLogging = false,
+  });
+
+  final bool enableBatching;
+  final int maxBatchSize;
+  final bool premultiplyAlpha;
+  final MipmapQuality mipmapQuality;
+  final bool debugMode;
+  final bool performanceLogging;
+}
+
+/// Performance metrics tracking for rendering
+class AtlasPainterMetrics {
+  AtlasPainterMetrics();
+
+  int get totalDrawCalls => _totalDrawCalls;
+  int get totalSpritesRendered => _totalSpritesRendered;
+  double get averageRenderTime => _averageRenderTime;
+  int get peakBatchSize => _peakBatchSize;
+
+  int _totalDrawCalls = 0;
+  int _totalSpritesRendered = 0;
+  double _averageRenderTime = 0;
+  int _peakBatchSize = 0;
+
+  void reset() {
+    _totalDrawCalls = 0;
+    _totalSpritesRendered = 0;
+    _averageRenderTime = 0;
+    _peakBatchSize = 0;
+  }
+}
 
 /// Высокопроизводительный рендерер атласа с поддержкой расширенных возможностей
 abstract class AtlasPainter {
@@ -14,16 +59,10 @@ abstract class AtlasPainter {
     required double width,
     required double height,
     String type = 'image/webp',
-    bool mipmap = false,
+    AtlasPainterConfig config = const AtlasPainterConfig(),
   }) async {
-    final painter = _AtlasPainter(context);
-    await painter._setAtlasFromBytes(
-      atlas,
-      type,
-      mipmap: mipmap,
-      width: width,
-      height: height,
-    );
+    final painter = _AtlasPainter(context, config);
+    await painter._setAtlasFromBytes(atlas, type, width: width, height: height);
     return painter;
   }
 
@@ -31,9 +70,12 @@ abstract class AtlasPainter {
   static AtlasPainter fromImage(
     web.WebGL2RenderingContext context,
     web.HTMLImageElement image, {
-    bool mipmap = false,
+    AtlasPainterConfig config = const AtlasPainterConfig(),
   }) =>
-      _AtlasPainter(context).._setAtlasFromImage(image, mipmap: mipmap);
+      _AtlasPainter(context, config).._setAtlasFromImage(image);
+
+  /// Get the painter metrics.
+  abstract final AtlasPainterMetrics metrics;
 
   /// Draw the atlas.
   void draw(
@@ -49,12 +91,20 @@ abstract class AtlasPainter {
 }
 
 class _AtlasPainter implements AtlasPainter {
-  _AtlasPainter(web.WebGL2RenderingContext ctxGL) : _gl = ctxGL {
+  _AtlasPainter(web.WebGL2RenderingContext ctxGL, AtlasPainterConfig config)
+      : _gl = ctxGL,
+        _config = config {
     _initShaders();
     _initBuffers();
+
+    if (_config.debugMode) {
+      l.d('AtlasPainter initialized with config: $_config');
+    }
   }
 
   final web.WebGL2RenderingContext _gl;
+  final AtlasPainterConfig _config;
+
   late web.WebGLProgram _program;
   late web.WebGLBuffer _quadBuffer;
   late web.WebGLBuffer _instanceBuffer;
@@ -64,6 +114,12 @@ class _AtlasPainter implements AtlasPainter {
 
   double _atlasWidth = 1024; // Дефолтный размер
   double _atlasHeight = 1024; // Дефолтный размер
+
+  @override
+  final AtlasPainterMetrics metrics = AtlasPainterMetrics();
+
+  // Cached shader compilation results
+  static final Map<String, web.WebGLShader> _shaderCache = <String, web.WebGLShader>{};
 
   // Шейдеры
   static const String _vertexShaderSource = '''
@@ -77,6 +133,8 @@ class _AtlasPainter implements AtlasPainter {
     uniform vec3 u_camera;        // x, y, zoom
     uniform vec2 u_resolution;    // width, height
     uniform vec2 u_atlasSize;     // Размер атласа
+
+    uniform float u_premultiplyAlpha;
 
     out vec2 v_texCoord;          // Texture coordinates
     out vec4 v_colorEffect;       // Color effects
@@ -109,6 +167,8 @@ class _AtlasPainter implements AtlasPainter {
     precision highp float;
 
     uniform sampler2D u_atlas;
+
+    uniform float u_premultiplyAlpha;
 
     in vec2 v_texCoord;
     in vec4 v_colorEffect;
@@ -147,20 +207,34 @@ class _AtlasPainter implements AtlasPainter {
         // Gamma correction
         vec3 corrected = pow(texColor.rgb, vec3(1.0 / gamma));
 
-        // Цветовая трансформация
+        // Color transformation
         vec3 hsvColor = rgb2hsv(corrected);
-        hsvColor.x += hue;  // Сдвиг оттенка
-        hsvColor.y *= saturation;  // Изменение насыщенности
+        hsvColor.x += hue;  // Hue shift
+        hsvColor.y *= saturation;  // Saturation modification
         vec3 finalColor = hsv2rgb(hsvColor);
 
-        outColor = vec4(finalColor, texColor.a * alpha);
+        // Premultiply alpha handling
+        if (u_premultiplyAlpha > 0.5) {
+            // Premultiply alpha: multiply RGB by alpha
+            finalColor *= texColor.a * alpha;
+            outColor = vec4(finalColor, texColor.a * alpha);
+        } else {
+            // Standard alpha blending
+            outColor = vec4(finalColor, texColor.a * alpha);
+        }
     }
   ''';
 
   void _initShaders() {
     // Создание и компиляция шейдеров
-    final vertexShader = _createShader(web.WebGL2RenderingContext.VERTEX_SHADER, _vertexShaderSource);
-    final fragmentShader = _createShader(web.WebGL2RenderingContext.FRAGMENT_SHADER, _fragmentShaderSource);
+    final vertexShader = _shaderCache[_vertexShaderSource] ??= _createShader(
+      web.WebGL2RenderingContext.VERTEX_SHADER,
+      _vertexShaderSource,
+    );
+    final fragmentShader = _shaderCache[_fragmentShaderSource] ??= _createShader(
+      web.WebGL2RenderingContext.FRAGMENT_SHADER,
+      _fragmentShaderSource,
+    );
 
     // Создание программы
     final program = _gl.createProgram();
@@ -239,7 +313,6 @@ class _AtlasPainter implements AtlasPainter {
   Future<void> _setAtlasFromBytes(
     Uint8List bytes,
     String type, {
-    bool mipmap = false,
     double width = 1024,
     double height = 1024,
   }) async {
@@ -257,14 +330,27 @@ class _AtlasPainter implements AtlasPainter {
     try {
       final imageBitmap = await web.window.createImageBitmap(blob).toDart;
 
-      _gl
-        ..bindTexture(web.WebGL2RenderingContext.TEXTURE_2D, atlasTexture)
+      _gl.bindTexture(web.WebGL2RenderingContext.TEXTURE_2D, atlasTexture);
 
-        // Установка параметров текстуры для пиксель-арта
+      // Premultiply alpha if configured
+      if (_config.premultiplyAlpha) {
+        _gl.pixelStorei(web.WebGL2RenderingContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
+      }
+
+      // Mipmap quality configuration
+      final minFilter = switch (_config.mipmapQuality) {
+        MipmapQuality.low => web.WebGL2RenderingContext.NEAREST_MIPMAP_NEAREST,
+        MipmapQuality.medium => web.WebGL2RenderingContext.LINEAR_MIPMAP_LINEAR,
+        MipmapQuality.high => web.WebGL2RenderingContext.LINEAR_MIPMAP_LINEAR,
+        _ => web.WebGL2RenderingContext.NEAREST,
+      };
+
+      // Установка параметров текстуры для пиксель-арта
+      _gl
         ..texParameteri(
           web.WebGL2RenderingContext.TEXTURE_2D,
           web.WebGL2RenderingContext.TEXTURE_MIN_FILTER,
-          mipmap ? web.WebGL2RenderingContext.LINEAR_MIPMAP_LINEAR : web.WebGL2RenderingContext.NEAREST,
+          minFilter,
         )
         ..texParameteri(
           web.WebGL2RenderingContext.TEXTURE_2D,
@@ -292,7 +378,8 @@ class _AtlasPainter implements AtlasPainter {
           imageBitmap,
         );
 
-      if (mipmap) _gl.generateMipmap(web.WebGL2RenderingContext.TEXTURE_2D);
+      // Generate mipmaps based on quality
+      if (_config.mipmapQuality != MipmapQuality.none) _gl.generateMipmap(web.WebGL2RenderingContext.TEXTURE_2D);
     } finally {
       web.URL.revokeObjectURL(blobUrl);
     }
@@ -305,13 +392,10 @@ class _AtlasPainter implements AtlasPainter {
   ///   final atlasImage = html.ImageElement();
   ///   atlasImage.src = 'atlas.png';
   ///   atlasImage.onLoad.listen((_) {
-  ///     painter._setAtlasTexture(atlasImage);
+  ///     painter._setAtlasFromImage(atlasImage);
   ///   });
   /// ```
-  void _setAtlasFromImage(
-    web.HTMLImageElement image, {
-    bool mipmap = false,
-  }) {
+  void _setAtlasFromImage(web.HTMLImageElement image) {
     final atlasTexture = _gl.createTexture();
     if (atlasTexture == null) throw Exception('Ошибка создания текстуры');
     _atlasTexture = atlasTexture;
@@ -319,14 +403,27 @@ class _AtlasPainter implements AtlasPainter {
     _atlasWidth = image.width.toDouble();
     _atlasHeight = image.height.toDouble();
 
-    _gl
-      ..bindTexture(web.WebGL2RenderingContext.TEXTURE_2D, atlasTexture)
+    _gl.bindTexture(web.WebGL2RenderingContext.TEXTURE_2D, atlasTexture);
 
-      // Установка параметров текстуры для пиксель-арта
+    // Premultiply alpha if configured
+    if (_config.premultiplyAlpha) {
+      _gl.pixelStorei(web.WebGL2RenderingContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);
+    }
+
+    // Mipmap quality configuration
+    final minFilter = switch (_config.mipmapQuality) {
+      MipmapQuality.low => web.WebGL2RenderingContext.NEAREST_MIPMAP_NEAREST,
+      MipmapQuality.medium => web.WebGL2RenderingContext.LINEAR_MIPMAP_LINEAR,
+      MipmapQuality.high => web.WebGL2RenderingContext.LINEAR_MIPMAP_LINEAR,
+      _ => web.WebGL2RenderingContext.NEAREST,
+    };
+
+    // Установка параметров текстуры для пиксель-арта
+    _gl
       ..texParameteri(
         web.WebGL2RenderingContext.TEXTURE_2D,
         web.WebGL2RenderingContext.TEXTURE_MIN_FILTER,
-        mipmap ? web.WebGL2RenderingContext.LINEAR_MIPMAP_LINEAR : web.WebGL2RenderingContext.NEAREST,
+        minFilter,
       )
       ..texParameteri(
         web.WebGL2RenderingContext.TEXTURE_2D,
@@ -354,24 +451,27 @@ class _AtlasPainter implements AtlasPainter {
         image,
       );
 
-    if (mipmap) _gl.generateMipmap(web.WebGL2RenderingContext.TEXTURE_2D);
+    // Generate mipmaps based on quality
+    if (_config.mipmapQuality != MipmapQuality.none) _gl.generateMipmap(web.WebGL2RenderingContext.TEXTURE_2D);
   }
 
-  @override
-  void draw(
-    Float32List instanceRects, // x, y, width, height для каждого спрайта
-    Float32List atlasRects, // x, y, width, height в атласе
-    Float32List colorEffects, // gamma, alpha для каждого спрайта
-    Float32List camera, // x, y, zoom
-    Float32List resolution, // width, height экрана
+  void _updateMetrics(int spriteCount, double renderTime) {
+    metrics
+      .._totalDrawCalls += 1
+      .._totalSpritesRendered += spriteCount
+      .._averageRenderTime = (metrics._averageRenderTime + renderTime) / metrics._totalDrawCalls
+      .._peakBatchSize = math.max(metrics._peakBatchSize, spriteCount);
+    if (_config.performanceLogging) l.d('Render Metrics: Sprites=$spriteCount, Time=${renderTime}ms');
+  }
+
+  void _drawDirect(
+    Float32List instanceRects,
+    Float32List atlasRects,
+    Float32List colorEffects,
+    Float32List camera,
+    Float32List resolution,
   ) {
     final instanceCount = instanceRects.length ~/ 4;
-
-    assert(instanceCount * 4 == instanceRects.length, 'Неверное количество элементов в instanceRects');
-    assert(instanceCount * 4 == atlasRects.length, 'Неверное количество элементов в atlasRects');
-    assert(instanceCount * 4 == colorEffects.length, 'Неверное количество элементов в colorEffects');
-    assert(camera.length == 3, 'Неверное количество элементов в camera');
-    assert(resolution.length == 2, 'Неверное количество элементов в resolution');
 
     _gl.useProgram(_program);
 
@@ -379,11 +479,13 @@ class _AtlasPainter implements AtlasPainter {
     final cameraLoc = _gl.getUniformLocation(_program, 'u_camera');
     final resolutionLoc = _gl.getUniformLocation(_program, 'u_resolution');
     final atlasSizeLoc = _gl.getUniformLocation(_program, 'u_atlasSize');
+    final premultiplyAlphaLoc = _gl.getUniformLocation(_program, 'u_premultiplyAlpha');
 
     _gl
       ..uniform3fv(cameraLoc, camera.toJS)
       ..uniform2fv(resolutionLoc, resolution.toJS)
       ..uniform2f(atlasSizeLoc, _atlasWidth, _atlasHeight)
+      ..uniform1f(premultiplyAlphaLoc, _config.premultiplyAlpha ? 1.0 : 0.0)
 
       // Привязка текстуры
       ..activeTexture(web.WebGL2RenderingContext.TEXTURE0)
@@ -441,6 +543,55 @@ class _AtlasPainter implements AtlasPainter {
       ..disableVertexAttribArray(1)
       ..disableVertexAttribArray(2)
       ..disableVertexAttribArray(3);
+  }
+
+  void _drawBatched(
+    Float32List instanceRects,
+    Float32List atlasRects,
+    Float32List colorEffects,
+    Float32List camera,
+    Float32List resolution,
+  ) {
+    final batchSize = _config.maxBatchSize;
+
+    final total = instanceRects.length ~/ 4;
+    for (var offset = 0; offset < total; offset += batchSize) {
+      final start = offset;
+      final end = math.min(offset + batchSize, total);
+      final batchInstanceRects = Float32List.sublistView(instanceRects, start * 4, end * 4);
+      final batchAtlasRects = Float32List.sublistView(atlasRects, start * 4, end * 4);
+      final batchColorEffects = Float32List.sublistView(colorEffects, start * 4, end * 4);
+
+      _drawDirect(batchInstanceRects, batchAtlasRects, batchColorEffects, camera, resolution);
+    }
+  }
+
+  @override
+  void draw(
+    Float32List instanceRects, // x, y, width, height для каждого спрайта
+    Float32List atlasRects, // x, y, width, height в атласе
+    Float32List colorEffects, // gamma, alpha для каждого спрайта
+    Float32List camera, // x, y, zoom
+    Float32List resolution, // width, height экрана
+  ) {
+    final instanceCount = instanceRects.length ~/ 4;
+
+    assert(instanceCount * 4 == instanceRects.length, 'Неверное количество элементов в instanceRects');
+    assert(instanceCount * 4 == atlasRects.length, 'Неверное количество элементов в atlasRects');
+    assert(instanceCount * 4 == colorEffects.length, 'Неверное количество элементов в colorEffects');
+    assert(camera.length == 3, 'Неверное количество элементов в camera');
+    assert(resolution.length == 2, 'Неверное количество элементов в resolution');
+
+    final startTime = DateTime.now();
+
+    if (_config.enableBatching && instanceCount > _config.maxBatchSize) {
+      _drawBatched(instanceRects, atlasRects, colorEffects, camera, resolution);
+    } else {
+      _drawDirect(instanceRects, atlasRects, colorEffects, camera, resolution);
+    }
+
+    final renderTime = DateTime.now().difference(startTime).inMicroseconds / 1000.0;
+    _updateMetrics(instanceCount, renderTime);
   }
 
   web.WebGLShader _createShader(int type, String source) {
