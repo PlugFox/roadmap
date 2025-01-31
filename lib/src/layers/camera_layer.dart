@@ -25,7 +25,6 @@ class CameraLayer implements Layer {
   StreamSubscription<MouseEvent>? _onMouseMoveSubscription;
   StreamSubscription<MouseEvent>? _onMouseUpSubscription;
   StreamSubscription<WheelEvent>? _onWheelSubscription;
-  final List<Gamepad> _gamepads = <Gamepad>[];
 
   @override
   void mount(RenderContext context) {
@@ -130,26 +129,6 @@ class CameraLayer implements Layer {
             ),
       );
     });
-
-    window
-      ..addEventListener('gamepadconnected', checkConnectedGamepadsJS)
-      ..addEventListener('gamepaddisconnected', checkConnectedGamepadsJS);
-  }
-
-  late final checkConnectedGamepadsJS = _checkConnectedGamepads.toJS;
-  void _checkConnectedGamepads(Event event) {
-    try {
-      final gamepads = window.navigator.getGamepads();
-      final length = gamepads.length;
-      _gamepads.clear(); // Clear the list and re-add connected gamepads
-      for (var i = 0; i < length; i++) {
-        final gamepad = gamepads[i];
-        if (gamepad == null) continue; // Skip empty slots
-        if (!gamepad.connected) continue; // Skip disconnected gamepads
-        if (_gamepads.any((element) => element.id == gamepad.id)) continue; // Skip already added gamepads
-        _gamepads.add(gamepad);
-      }
-    } on Object {/* ignore */}
   }
 
   @override
@@ -160,23 +139,22 @@ class CameraLayer implements Layer {
     _onMouseMoveSubscription?.cancel();
     _onMouseUpSubscription?.cancel();
     _onWheelSubscription?.cancel();
-
-    window
-      ..removeEventListener('gamepadconnected', checkConnectedGamepadsJS)
-      ..removeEventListener('gamepaddisconnected', checkConnectedGamepadsJS);
   }
 
   @override
   void update(RenderContext context, double delta) {
     if (_isDragging) {
-      // Do nothing - dragging is handled in mouse move event
+      // Do nothing - dragging is handled in mouse or touch events
     } else if (_velocity != Offset.zero) {
+      // Keyboard controls
       final camera = context.camera;
       final newPos = camera.position + _velocity * delta;
       camera.moveTo(newPos);
     } else {
       // Gamepad controls
-      for (final gamepad in _gamepads) {
+      final gamepads = window.navigator.getGamepads().toDart;
+      for (final gamepad in gamepads) {
+        if (gamepad == null) continue; // Skip null gamepads
         if (!gamepad.connected) continue; // Skip disconnected gamepads
         final axes = gamepad.axes;
         final camera = context.camera;
