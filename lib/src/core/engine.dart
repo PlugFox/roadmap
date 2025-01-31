@@ -1,31 +1,25 @@
 // ignore_for_file: prefer_constructors_over_static_methods
-
 import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:l/l.dart';
+import 'package:roadmap/src/core/camera.dart';
+import 'package:roadmap/src/core/geometry.dart' as g;
 import 'package:web/web.dart';
 
 // Rendering context
 class RenderContext {
   RenderContext._({
-    required int width,
-    required int height,
+    required this.camera,
     required this.canvasGL,
     required this.ctxGL,
     required this.canvasUI,
     required this.ctx2D,
     required this.resources,
-  })  : _width = width,
-        _height = height;
+  });
 
-  /// Width of the canvas.
-  int get width => _width;
-  int _width;
-
-  /// Height of the canvas.
-  int get height => _height;
-  int _height;
+  /// Camera for rendering.
+  final Camera camera;
 
   /// WebGL canvas for rendering shaders.
   final HTMLCanvasElement canvasGL;
@@ -73,7 +67,7 @@ abstract interface class Layer {
 /// Layer that can be resized.
 abstract interface class ResizableLayer implements Layer {
   /// Called when the layer is resized.
-  void onResize(int width, int height);
+  void onResize(double width, double height);
 }
 
 /// Rendering engine that manages layers and rendering.
@@ -160,13 +154,18 @@ class RenderingEngine {
         shadow.append(container
           ..append(canvasGL)
           ..append(canvasUI));
+        final viewport = g.Size(width.toDouble(), height.toDouble());
+        final camera = Camera(
+          position: g.Offset(viewport.width / 2, viewport.height / 2),
+          viewport: viewport,
+          zoom: .5,
+        );
         final engine = RenderingEngine._(
           shadow: shadow,
           container: container,
           layers: layers,
           context: RenderContext._(
-            width: width,
-            height: height,
+            camera: camera,
             canvasGL: canvasGL,
             ctxGL: ctxGL,
             canvasUI: canvasUI,
@@ -193,23 +192,20 @@ class RenderingEngine {
   /// Resize the rendering engine.
   void _onResize(int width, int height) {
     if (_isClosed) return;
-    if (_context.width == width && _context.height == height) return;
+    final camera = _context.camera;
+    final viewport = camera.viewport;
+    final w = width.toDouble(), h = height.toDouble();
+    if (viewport.width == w && viewport.height == h) return;
     l.d('Resize to $width x $height');
-    _context
-      .._width = width
-      .._height = height;
     _context.canvasGL
       ..width = width
       ..height = height;
     _context.canvasUI
       ..width = width
       ..height = height;
+    camera.changeSize(w, h);
     // Notify layers about resize
-    for (final layer in _layers) {
-      if (layer case ResizableLayer resizableLayer) {
-        resizableLayer.onResize(width, height);
-      }
-    }
+    for (final layer in _layers) if (layer case ResizableLayer resizableLayer) resizableLayer.onResize(w, h);
   }
 
   late final JSExportedDartFunction _onResizeJS = ((Event event) {
@@ -220,7 +216,8 @@ class RenderingEngine {
   void addLayer(Layer layer) {
     _layers.add(layer);
     layer.mount(_context);
-    if (layer is ResizableLayer) layer.onResize(_context.width, _context.height);
+    final viewport = _context.camera.viewport;
+    if (layer is ResizableLayer) layer.onResize(viewport.width, viewport.height);
   }
 
   /// Remove a layer from the rendering engine.

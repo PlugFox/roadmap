@@ -13,7 +13,7 @@ class SkillsLayer implements ResizableLayer {
   }
 
   @override
-  void onResize(int width, int height) {
+  void onResize(double width, double height) {
     // TODO: implement onResize
   }
 

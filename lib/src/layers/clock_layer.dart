@@ -38,8 +38,8 @@ class ClockLayer implements ResizableLayer {
   late int _colorLocation;
   late WebGLUniformLocation _resolutionLocation;
 
-  int _width = window.innerWidth;
-  int _height = window.innerHeight;
+  double _width = 0;
+  double _height = 0;
   late double _centerX;
   late double _centerY;
   late double _radius;
@@ -205,7 +205,7 @@ class ClockLayer implements ResizableLayer {
   }
 
   @override
-  void onResize(int width, int height) {
+  void onResize(double width, double height) {
     _width = width;
     _height = height;
     _updateDimensions();
@@ -252,7 +252,7 @@ class ClockLayer implements ResizableLayer {
     final gl = context.ctxGL;
 
     // Очищаем и подготавливаем GL
-    gl.viewport(0, 0, _width, _height);
+    gl.viewport(0, 0, context.camera.viewport.width.ceil(), context.camera.viewport.height.ceil());
     //gl.clearColor(0.1, 0.1, 0.1, 1.0); // Фон WebGL
     gl.clear(WebGL2RenderingContext.COLOR_BUFFER_BIT);
     //gl.lineWidth(2);
@@ -290,7 +290,7 @@ class ClockLayer implements ResizableLayer {
     // Draw text on top of the canvas
 
     context.ctx2D
-      ..clearRect(0, 0, context.width, context.height)
+      ..clearRect(0, 0, context.camera.viewport.width, context.camera.viewport.height)
       ..font = '${_fontSize}px Arial'
       ..fillStyle = 'white'.toJS
       ..textAlign = 'center'

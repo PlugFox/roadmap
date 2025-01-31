@@ -69,6 +69,7 @@ dependencies:
   #async: any
   #path: any
   #convert: any
+  vector_math: ^2.1.4
 
   # Transport and serialization
   #flat_buffers: ^23.5.26
