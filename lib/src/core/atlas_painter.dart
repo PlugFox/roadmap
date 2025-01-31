@@ -63,30 +63,30 @@ class _AtlasPainter implements AtlasPainter {
   static const String _vertexShaderSource = '''
     #version 300 es
 
-    layout(location = 0) in vec2 a_position;
+    layout(location = 0) in vec2 a_position;      // x, y
     layout(location = 1) in vec4 a_instanceRect;  // x, y, width, height
     layout(location = 2) in vec4 a_uvRect;        // x, y, width, height in atlas
     layout(location = 3) in vec4 a_colorEffect;   // gamma, alpha, unused, unused
 
     uniform vec3 u_camera;        // x, y, zoom
-    uniform vec2 u_resolution;
+    uniform vec2 u_resolution;    // width, height
 
-    out vec2 v_texCoord;
-    out vec4 v_colorEffect;
+    out vec2 v_texCoord;          // Texture coordinates
+    out vec4 v_colorEffect;       // Color effects
 
     void main() {
-        // Преобразование локальных координат квада в координаты инстанса
+        // Compute world position of the vertex in the instance
         vec2 instancePos = a_instanceRect.xy;
         vec2 instanceSize = a_instanceRect.zw;
 
-        // Применяем позицию и масштаб камеры
+        // Apply camera position and zoom
         vec2 worldPos = (instancePos + a_position * instanceSize - u_camera.xy) * u_camera.z;
 
-        // Преобразование в clip space
+        // Calculate clip space
         vec2 clipSpace = (worldPos / u_resolution) * 2.0 - 1.0;
         gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
 
-        // Вычисление текстурных координат
+        // Calculate texture coordinates
         vec2 uvPos = a_uvRect.xy;
         vec2 uvSize = a_uvRect.zw;
         v_texCoord = uvPos + a_position * uvSize;
@@ -109,11 +109,11 @@ class _AtlasPainter implements AtlasPainter {
     void main() {
         vec4 texColor = texture(u_atlas, v_texCoord);
 
-        // Применяем эффекты
+        // Apply color effects
         float gamma = v_colorEffect.x;
         float alpha = v_colorEffect.y;
 
-        // Гамма-коррекция
+        // Gamma correction
         vec3 corrected = pow(texColor.rgb, vec3(1.0 / gamma));
 
         outColor = vec4(corrected, texColor.a * alpha);
