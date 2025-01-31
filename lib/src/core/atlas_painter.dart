@@ -60,7 +60,7 @@ class _AtlasPainter implements AtlasPainter {
   late web.WebGLTexture _atlasTexture;
 
   // Шейдеры
-  final String vertexShaderSource = '''
+  static const String _vertexShaderSource = '''
     #version 300 es
 
     layout(location = 0) in vec2 a_position;
@@ -95,7 +95,7 @@ class _AtlasPainter implements AtlasPainter {
     }
   ''';
 
-  final String fragmentShaderSource = '''
+  static const String _fragmentShaderSource = '''
     #version 300 es
     precision highp float;
 
@@ -122,8 +122,8 @@ class _AtlasPainter implements AtlasPainter {
 
   void _initShaders() {
     // Создание и компиляция шейдеров
-    final vertexShader = _createShader(web.WebGL2RenderingContext.VERTEX_SHADER, vertexShaderSource);
-    final fragmentShader = _createShader(web.WebGL2RenderingContext.FRAGMENT_SHADER, fragmentShaderSource);
+    final vertexShader = _createShader(web.WebGL2RenderingContext.VERTEX_SHADER, _vertexShaderSource);
+    final fragmentShader = _createShader(web.WebGL2RenderingContext.FRAGMENT_SHADER, _fragmentShaderSource);
 
     // Создание программы
     final program = _gl.createProgram();
@@ -175,7 +175,18 @@ class _AtlasPainter implements AtlasPainter {
   }
 
   /// Set the atlas texture from bytes.
+  ///
+  /// For example:
+  /// ```dart
+  ///   final response = await http.get(Uri.base.resolve('atlas.png'));
+  ///   if (response.statusCode != 200) throw Exception('Failed to load skills atlas: ${response.statusCode}');
+  ///   await painter._setAtlasFromBytes(response.bodyBytes, 'image/png');
+  /// ```
   Future<void> _setAtlasFromBytes(Uint8List bytes, [String type = 'image/webp']) async {
+    final atlasTexture = _gl.createTexture();
+    if (atlasTexture == null) throw Exception('Ошибка создания текстуры');
+    _atlasTexture = atlasTexture;
+
     final blob = web.Blob(<JSUint8Array>[bytes.toJS].toJS, web.BlobPropertyBag(type: type));
 
     final blobUrl = web.URL.createObjectURL(blob);
@@ -184,7 +195,7 @@ class _AtlasPainter implements AtlasPainter {
       final imageBitmap = await web.window.createImageBitmap(blob).toDart;
 
       _gl
-        ..bindTexture(web.WebGL2RenderingContext.TEXTURE_2D, _atlasTexture)
+        ..bindTexture(web.WebGL2RenderingContext.TEXTURE_2D, atlasTexture)
 
         // Установка параметров текстуры для пиксель-арта
         ..texParameteri(
@@ -223,6 +234,15 @@ class _AtlasPainter implements AtlasPainter {
   }
 
   /// Set the atlas texture from an html image.
+  ///
+  /// For example:
+  /// ```dart
+  ///   final atlasImage = html.ImageElement();
+  ///   atlasImage.src = 'atlas.png';
+  ///   atlasImage.onLoad.listen((_) {
+  ///     painter._setAtlasTexture(atlasImage);
+  ///   });
+  /// ```
   void _setAtlasFromImage(web.HTMLImageElement image) {
     final atlasTexture = _gl.createTexture();
     if (atlasTexture == null) throw Exception('Ошибка создания текстуры');
