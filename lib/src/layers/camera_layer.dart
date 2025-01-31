@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:js_interop';
 
 import 'package:roadmap/src/core/engine.dart';
 import 'package:roadmap/src/core/geometry.dart';
@@ -24,6 +25,7 @@ class CameraLayer implements Layer {
   StreamSubscription<MouseEvent>? _onMouseMoveSubscription;
   StreamSubscription<MouseEvent>? _onMouseUpSubscription;
   StreamSubscription<WheelEvent>? _onWheelSubscription;
+  final List<Gamepad> _gamepads = <Gamepad>[];
 
   @override
   void mount(RenderContext context) {
@@ -128,6 +130,26 @@ class CameraLayer implements Layer {
             ),
       );
     });
+
+    window
+      ..addEventListener('gamepadconnected', checkConnectedGamepadsJS)
+      ..addEventListener('gamepaddisconnected', checkConnectedGamepadsJS);
+  }
+
+  late final checkConnectedGamepadsJS = _checkConnectedGamepads.toJS;
+  void _checkConnectedGamepads(Event event) {
+    try {
+      final gamepads = window.navigator.getGamepads();
+      final length = gamepads.length;
+      _gamepads.clear(); // Clear the list and re-add connected gamepads
+      for (var i = 0; i < length; i++) {
+        final gamepad = gamepads[i];
+        if (gamepad == null) continue; // Skip empty slots
+        if (!gamepad.connected) continue; // Skip disconnected gamepads
+        if (_gamepads.any((element) => element.id == gamepad.id)) continue; // Skip already added gamepads
+        _gamepads.add(gamepad);
+      }
+    } on Object {/* ignore */}
   }
 
   @override
@@ -138,14 +160,39 @@ class CameraLayer implements Layer {
     _onMouseMoveSubscription?.cancel();
     _onMouseUpSubscription?.cancel();
     _onWheelSubscription?.cancel();
+
+    window
+      ..removeEventListener('gamepadconnected', checkConnectedGamepadsJS)
+      ..removeEventListener('gamepaddisconnected', checkConnectedGamepadsJS);
   }
 
   @override
   void update(RenderContext context, double delta) {
-    if (!_isDragging && _velocity != Offset.zero) {
+    if (_isDragging) {
+      // Do nothing - dragging is handled in mouse move event
+    } else if (_velocity != Offset.zero) {
       final camera = context.camera;
       final newPos = camera.position + _velocity * delta;
       camera.moveTo(newPos);
+    } else {
+      // Gamepad controls
+      for (final gamepad in _gamepads) {
+        if (!gamepad.connected) continue; // Skip disconnected gamepads
+        final axes = gamepad.axes;
+        final camera = context.camera;
+        final dx = axes[0].toDartDouble; // Left stick X (for right stick use 2 index instead of 0)
+        final dy = axes[1].toDartDouble; // Left stick Y (for right stick use 3 index instead of 1)
+        const deadZoneMin = .3, deadZoneMax = 1; // Dead zone values
+        if (dx.abs() < deadZoneMin && dy.abs() < deadZoneMin) continue;
+        final offsetX = deadZoneMax * dx.abs() + deadZoneMin * (1 - dx.abs()); // Normalize the value
+        final offsetY = deadZoneMax * dy.abs() + deadZoneMin * (1 - dy.abs()); // Normalize the value
+        final offset = Offset(
+          offsetX * _speed * delta / context.camera.zoom * dx.sign,
+          offsetY * _speed * delta / context.camera.zoom * dy.sign,
+        );
+        if (offset == Offset.zero) continue;
+        camera.moveTo(camera.position + offset);
+      }
     }
   }
 
