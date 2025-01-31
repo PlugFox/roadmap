@@ -129,11 +129,15 @@ class RenderingEngine with ChangeNotifier {
           <String, Object?>{
             'alpha': false,
             'depth': false,
-            'antialias': true, // false, - for performance and pixel art
+            'stencil': false,
+            'antialias': false, // - for performance and pixel art
             'powerPreference': 'high-performance',
+            'premultipliedAlpha': false,
             'preserveDrawingBuffer': false,
+            'failIfMajorPerformanceCaveat': false, // true, - for performance
           }.jsify(),
         ) as WebGL2RenderingContext;
+
         // Initialize 2D Canvas
         final canvasUI = document.createElement('canvas') as HTMLCanvasElement
           ..id = 'ui-canvas'

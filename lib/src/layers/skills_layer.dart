@@ -35,7 +35,13 @@ class SkillsLayer implements Layer {
       if (_atlasPainter != null) return;
       final response = await http.get(Uri.base.resolve('assets/atlas.webp'));
       if (response.statusCode != 200) throw Exception('Failed to load skills atlas: ${response.statusCode}');
-      _atlasPainter = await AtlasPainter.fromBytes(context, response.bodyBytes, 'image/webp' /* 'image/png' */);
+      _atlasPainter = await AtlasPainter.fromBytes(
+        context: context,
+        width: 600,
+        height: 100,
+        atlas: response.bodyBytes,
+        type: 'image/webp' /* 'image/png' */,
+      );
       _dirty = true;
     } on Object catch (error, stackTrace) {
       l.w('Failed to load skills atlas: $error', stackTrace);
@@ -99,7 +105,7 @@ class SkillsLayer implements Layer {
     for (var i = 0; i < count; i++) {
       final row = i ~/ sqrtCount;
       final col = i % sqrtCount;
-      const spacing = 200.0, startX = 100.0, startY = 100.0, width = 1000.0, height = 1000.0;
+      const spacing = 200.0, startX = 100.0, startY = 100.0, width = 500.0, height = 500.0;
       instanceRects[i * 4 + 0] = startX + col * spacing;
       instanceRects[i * 4 + 1] = startY + row * spacing;
       instanceRects[i * 4 + 2] = width;
@@ -107,28 +113,25 @@ class SkillsLayer implements Layer {
     }
 
     // TODO(plugfox): Move to shader or painter
-    const aWidth = 600, aHeight = 100; // Ширина и высота атласа
-
     final ms = DateTime.now().millisecondsSinceEpoch ~/ 250; // Animation frame
-    double anim(int i) => ((ms + i) % 6) * 100.0 / aWidth;
+    double anim(int i) => ((ms + i) % 6) * 100.0;
 
     // Нормализация координат спрайтов в атласе
     // x, y, width, height
     final atlasRects = td.Float32List.fromList([
-      anim(0), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 1
-      anim(1), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 2
-      anim(2), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 2
-      for (var i = 3; i < count; i++) ...<double>[anim(i), 0 / aHeight, 100 / aWidth, 100 / aHeight], // спрайты 4-count
+      anim(0), 0, 100, 100, // спрайт 1
+      anim(1), 0, 100, 100, // спрайт 2
+      anim(2), 0, 100, 100, // спрайт 2
+      for (var i = 3; i < count; i++) ...<double>[anim(i), 0, 100, 100], // спрайты 4-count
     ]);
 
     // Эффекты цвета
-    // Первые два числа - гамма и прозрачность
-    // Последние два числа - зарезервированы для будущих цветовых эффектов
+    // gamma, alpha, hue, saturation
     final colorEffects = td.Float32List.fromList([
-      1.0, 1.0, 0, 0, // Первый: нормальная гамма (1.0), полностью непрозрачный (1.0)
-      1.0, 0.5, 0, 0, // Второй: нормальная гамма (1.0), полупрозрачный (0.5)
-      0.5, 1.0, 0, 0, // Третий: низкая гамма (0.5), полностью непрозрачный (1.0)
-      for (var i = 3; i < count; i++) ...<double>[1, 1, 0, 0], // Спрайты 4-count
+      1.0, 1.0, 1.0, 1.0, // Первый: нормальная гамма (1.0), полностью непрозрачный (1.0)
+      1.0, 0.5, 1.0, 1.0, // Второй: нормальная гамма (1.0), полупрозрачный (0.5)
+      0.5, 1.0, 1.0, 1.0, // Третий: низкая гамма (0.5), полностью непрозрачный (1.0)
+      for (var i = 3; i < count; i++) ...<double>[1, 1, 1, 1], // Спрайты 4-count
     ]);
 
     // Рендеринг

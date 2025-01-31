@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:js_interop';
 
+import 'package:l/l.dart';
 import 'package:roadmap/src/core/camera.dart';
 import 'package:roadmap/src/core/engine.dart';
 import 'package:roadmap/src/core/geometry.dart';
@@ -26,6 +27,7 @@ class CameraLayer implements Layer {
   StreamSubscription<MouseEvent>? _onMouseMoveSubscription;
   StreamSubscription<MouseEvent>? _onMouseUpSubscription;
   StreamSubscription<WheelEvent>? _onWheelSubscription;
+  StreamSubscription<TouchEvent>? _onTouchMoveSubscription;
 
   @override
   void mount(RenderContext context) {
@@ -85,6 +87,7 @@ class CameraLayer implements Layer {
           event.clientY.toDouble() / context.camera.zoom,
         );
         event.preventDefault();
+        //event.stopPropagation();
       }
       if ((event.buttons & 0x04) != 0) {
         // Middle mouse
@@ -94,6 +97,7 @@ class CameraLayer implements Layer {
           event.clientY.toDouble() / context.camera.zoom,
         );
         event.preventDefault();
+        //event.stopPropagation();
       }
     }, cancelOnError: false);
 
@@ -109,6 +113,8 @@ class CameraLayer implements Layer {
         _lastMousePosition = newMousePosition;
         final camera = context.camera;
         camera.moveTo(camera.position - delta);
+        event.preventDefault();
+        //event.stopPropagation();
       }
     }, cancelOnError: false);
 
@@ -116,20 +122,41 @@ class CameraLayer implements Layer {
     _onMouseUpSubscription?.cancel();
     _onMouseUpSubscription = EventStreamProviders.mouseUpEvent.forTarget(window).listen((event) {
       _isDragging = false;
-    });
+      event.preventDefault();
+      //event.stopPropagation();
+      l.i('Mouse up');
+    }, cancelOnError: false);
 
     // Wheel events
     _onWheelSubscription?.cancel();
     _onWheelSubscription = EventStreamProviders.wheelEvent.forTarget(window).listen((event) {
       final camera = context.camera;
-      camera.moveTo(
-        camera.position +
-            Offset(
-              -event.deltaX / context.camera.zoom,
-              -event.deltaY / context.camera.zoom,
-            ),
-      );
-    });
+      if (event.ctrlKey) {
+        camera.changeZoom(camera.zoom - event.deltaY / 1000);
+        event.preventDefault();
+        //event.stopPropagation();
+      } else {
+        final deltaX = event.deltaX, deltaY = event.deltaY;
+        //if (deltaX.abs() < .1 && deltaY.abs() < .1) return;
+        final offset = Offset(
+          -deltaX / context.camera.zoom,
+          -deltaY / context.camera.zoom,
+        );
+        if (offset == Offset.zero) return;
+        //if (offset.distanceSquared < 1) return;
+        l.i('Wheel: ${event.deltaX}, ${event.deltaY}');
+        camera.moveTo(camera.position + offset);
+        event.preventDefault();
+        //event.stopPropagation();
+      }
+    }, cancelOnError: false);
+
+    _onTouchMoveSubscription?.cancel();
+    _onTouchMoveSubscription = EventStreamProviders.touchMoveEvent.forTarget(window).listen((event) {
+      if (event.touches.length == 0) return;
+      l.i('Touch move: ${event.touches.length}');
+      event.preventDefault();
+    }, cancelOnError: false);
   }
 
   @override
@@ -140,6 +167,7 @@ class CameraLayer implements Layer {
     _onMouseMoveSubscription?.cancel();
     _onMouseUpSubscription?.cancel();
     _onWheelSubscription?.cancel();
+    _onTouchMoveSubscription?.cancel();
   }
 
   void _gamepadHandler(Camera camera, Gamepad gamepad, double dx, double dy, double delta) {
