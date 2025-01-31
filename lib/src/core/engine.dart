@@ -134,7 +134,7 @@ class RenderingEngine {
           <String, Object?>{
             'alpha': false,
             'depth': false,
-            'antialias': false,
+            'antialias': true, // false, - for performance and pixel art
             'powerPreference': 'high-performance',
             'preserveDrawingBuffer': false,
           }.jsify(),
@@ -258,23 +258,6 @@ class RenderingEngine {
     if (_isRunning) return;
 
     final container = _container;
-
-    /* final width = container.clientWidth;
-    final height = container.clientHeight;
-    _resizeObserver?.disconnect();
-    _resizeObserver = ResizeObserver(
-      (JSArray<ResizeObserverEntry> entries) {
-        if (!container.isConnected) {
-          stop();
-          return;
-        }
-        final length = entries.length;
-        for (var i = 0; i < length; i++) {
-          final DOMRectReadOnly(:width, :height) = entries[i].contentRect;
-          _onResize(width.round(), height.round());
-        }
-      }.toJS,
-    )..observe(container, ResizeObserverOptions(box: 'content-box')); */
 
     window.addEventListener('resize', _onResizeJS);
 

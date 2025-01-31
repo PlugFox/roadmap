@@ -29,10 +29,18 @@ void _initialize() {
     element.text = 'The time is ${now.hour}:${now.minute}:${now.second} '
         'and your Dart web app is running!';
   }); */
-
-  final engine = RenderingEngine.instance
-    ..addLayer(ClockLayer())
+  final clock = ClockLayer();
+  final _ = RenderingEngine.instance
+    ..addLayer(clock)
     ..start();
+
+  void setTime() {
+    final DateTime(:hour, :minute, :second) = DateTime.now();
+    clock.setTime(hour: hour, minute: minute, second: second);
+  }
+
+  Timer.periodic(const Duration(seconds: 1), (_) => setTime());
+  setTime();
 
   l.i('Engine started');
 
