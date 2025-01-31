@@ -15,6 +15,7 @@ class SkillsLayer implements Layer {
   @override
   bool get isVisible => true;
   bool _dirty = false;
+  bool _needRelayout = false;
 
   AtlasPainter? _atlasPainter;
 
@@ -50,18 +51,26 @@ class SkillsLayer implements Layer {
   }
 
   void _onCameraChange() {
+    _needRelayout = true;
+  }
+
+  /// Execute relayout if needed, and mark as dirty
+  /// For example, when camera changes -
+  /// we need to relayout and extract objects from the QuadTree
+  void _relayout(RenderContext context) {
+    _needRelayout = false;
     _dirty = true;
   }
 
   @override
   void update(RenderContext context, double delta) {
-    // TODO: implement update
+    if (_needRelayout) _relayout(context);
   }
 
   @override
   void render(RenderContext context, double delta) {
     if (!_dirty) return; // Skip rendering if not dirty
-    //_dirty = false;
+    _dirty = false;
 
     final ctxGL = context.ctxGL;
     final ctx2D = context.ctx2D;
