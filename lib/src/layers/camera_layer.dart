@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:js_interop';
 
+import 'package:roadmap/src/core/camera.dart';
 import 'package:roadmap/src/core/engine.dart';
 import 'package:roadmap/src/core/geometry.dart';
 import 'package:web/web.dart';
@@ -141,6 +142,19 @@ class CameraLayer implements Layer {
     _onWheelSubscription?.cancel();
   }
 
+  void _gamepadHandler(Camera camera, Gamepad gamepad, double dx, double dy, double delta) {
+    const deadZoneMin = .3, deadZoneMax = 1; // Dead zone values
+    if (dx.abs() < deadZoneMin && dy.abs() < deadZoneMin) return;
+    final offsetX = deadZoneMax * dx.abs() + deadZoneMin * (1 - dx.abs()); // Normalize the value
+    final offsetY = deadZoneMax * dy.abs() + deadZoneMin * (1 - dy.abs()); // Normalize the value
+    final offset = Offset(
+      offsetX * _speed * delta / camera.zoom * dx.sign,
+      offsetY * _speed * delta / camera.zoom * dy.sign,
+    );
+    if (offset == Offset.zero) return;
+    camera.moveTo(camera.position + offset);
+  }
+
   @override
   void update(RenderContext context, double delta) {
     if (_isDragging) {
@@ -158,18 +172,10 @@ class CameraLayer implements Layer {
         if (!gamepad.connected) continue; // Skip disconnected gamepads
         final axes = gamepad.axes;
         final camera = context.camera;
-        final dx = axes[0].toDartDouble; // Left stick X (for right stick use 2 index instead of 0)
-        final dy = axes[1].toDartDouble; // Left stick Y (for right stick use 3 index instead of 1)
-        const deadZoneMin = .3, deadZoneMax = 1; // Dead zone values
-        if (dx.abs() < deadZoneMin && dy.abs() < deadZoneMin) continue;
-        final offsetX = deadZoneMax * dx.abs() + deadZoneMin * (1 - dx.abs()); // Normalize the value
-        final offsetY = deadZoneMax * dy.abs() + deadZoneMin * (1 - dy.abs()); // Normalize the value
-        final offset = Offset(
-          offsetX * _speed * delta / context.camera.zoom * dx.sign,
-          offsetY * _speed * delta / context.camera.zoom * dy.sign,
-        );
-        if (offset == Offset.zero) continue;
-        camera.moveTo(camera.position + offset);
+        // Left stick
+        _gamepadHandler(camera, gamepad, axes[0].toDartDouble, axes[1].toDartDouble, delta);
+        // Right stick
+        _gamepadHandler(camera, gamepad, axes[2].toDartDouble, axes[3].toDartDouble, delta);
       }
     }
   }
