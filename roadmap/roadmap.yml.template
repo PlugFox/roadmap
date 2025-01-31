@@ -1,0 +1,497 @@
+# Semversion of the roadmap.
+# In format "x.y.z"
+version: 0.0.1
+
+
+# Language of the roadmap.
+# For example "en"
+language: "en"
+
+
+# The boundary of the roadmap in pixels.
+boundary:
+  left: -10000
+  top: -10000
+  width: 10000
+  height: 10000
+
+
+# The size of the sprite atlas in pixels.
+atlas:
+  width: 512
+  height: 512
+  sprite: 32
+
+
+# Areas of the roadmap.
+areas:
+  #- id: int
+  #  name: string
+  #  description: string
+  #  color: int | hex | string
+  #  boundary:
+  #    left: float
+  #    top: float
+  #    width: float
+  #    height: float
+
+  - id: 0
+    name: "Default"
+    description: "Default area"
+    color: 0
+    boundary:
+      left: -10000
+      top: -10000
+      width: 10000
+      height: 10000
+
+
+# Rank names and colors.
+# F | E | D | C | B | A | S | SS | SSS
+ranks:
+  #- id: int
+  #  name: string
+  #  description: string
+  #  color: int | hex | string
+
+  # Basic
+  - id: 0
+    name: "F"
+    description: "F"
+    color: 0
+
+  # Beginner
+  - id: 1
+    name: "E"
+    description: "E"
+    color: 0
+
+  # Intermediate
+  - id: 2
+    name: "D"
+    description: "D"
+    color: 0
+
+  # Experienced
+  - id: 3
+    name: "C"
+    description: "C"
+    color: 0
+
+  # Advanced
+  - id: 4
+    name: "B"
+    description: "B"
+    color: 0
+
+  # Senior
+  - id: 5
+    name: "A"
+    description: "A"
+    color: 0
+
+  # Expert
+  - id: 6
+    name: "S"
+    description: "S"
+    color: 0
+
+  # Master
+  - id: 7
+    name: "SS"
+    description: "SS"
+    color: 0
+
+  # Legend / Epic
+  - id: 8
+    name: "SSS"
+    description: "SSS"
+    color: 0
+
+
+# Levels:
+# Basic | Beginner | Intermediate | Experienced | Advanced | Senior | Expert | Master | Legend
+levels:
+  - id: 0
+    name: "Basic"
+    description: "Basic"
+    radius: 2000
+    color: "#4527A0"
+
+  - id: 1
+    name: "Beginner"
+    description: "Beginner"
+    radius: 3000
+    color: "#1565C0"
+
+  - id: 2
+    name: "Intermediate"
+    description: "Intermediate"
+    radius: 4000
+    color: "#00838F"
+
+  - id: 3
+    name: "Experienced"
+    description: "Experienced"
+    radius: 5000
+    color: "#2E7D32"
+
+  - id: 4
+    name: "Advanced"
+    description: "Advanced"
+    radius: 6000
+    color: "#9E9D24"
+
+  - id: 5
+    name: "Senior"
+    description: "Senior"
+    radius: 7000
+    color: "#FF8F00"
+
+  - id: 6
+    name: "Expert"
+    description: "Expert"
+    radius: 8000
+    color: "#D84315"
+
+  - id: 7
+    name: "Master"
+    description: "Master"
+    radius: 9000
+    color: "#C62828"
+
+  - id: 8
+    name: "Legend"
+    description: "Legend"
+    radius: 10000
+    color: "#AD1457"
+
+
+# Tags:
+# Id of the tag is used in the skills section and also its the position of the sprite in the sprite atlas.
+# Sprite position is calculated as follows: x = id % 16 * 32, y = id ~/ 16 * 32
+tags:
+  - id: 0
+    sprite: 0
+    name: "Dart Core"
+    description: ""
+
+  - id: 1
+    sprite: 1
+    name: "Flutter Framework"
+    description: ""
+
+  - id: 2
+    sprite: 2
+    name: "Testing & Debugging"
+    description: ""
+
+  - id: 3
+    sprite: 3
+    name: "Packages & Plugins"
+    description: ""
+
+  - id: 4
+    sprite: 4
+    name: "Computer Science"
+    description: ""
+
+  - id: 5
+    sprite: 5
+    name: "UI/UX Design"
+    description: ""
+
+  - id: 6
+    sprite: 6
+    name: "Tools"
+    description: ""
+
+  - id: 7
+    sprite: 7
+    name: "Integrations, APIs, Transports"
+    description: ""
+
+  - id: 8
+    sprite: 8
+    name: "DevOps & CI/CD"
+    description: ""
+
+  - id: 9
+    sprite: 9
+    name: "Backend"
+    description: ""
+
+  - id: 10
+    sprite: 10
+    name: "Performance Optimization"
+    description: ""
+
+  - id: 11
+    sprite: 11
+    name: "Soft Skills"
+    description: ""
+
+  - id: 12
+    sprite: 12
+    name: "Security"
+    description: ""
+
+  - id: 13
+    sprite: 13
+    name: "Documentation"
+    description: ""
+
+  - id: 14
+    sprite: 14
+    name: "Source Control"
+    description: ""
+
+  - id: 15
+    sprite: 15
+    name: "Code Style"
+    description: ""
+
+  - id: 16
+    sprite: 16
+    name: "Localization"
+    description: ""
+
+  - id: 17
+    sprite: 17
+    name: "Android"
+    description: ""
+
+  - id: 18
+    sprite: 18
+    name: "iOS"
+    description: ""
+
+  - id: 19
+    sprite: 19
+    name: "Web"
+    description: ""
+
+  - id: 20
+    sprite: 20
+    name: "Windows"
+    description: ""
+
+  - id: 21
+    sprite: 21
+    name: "macOS"
+    description: ""
+
+  - id: 22
+    sprite: 22
+    name: "Linux"
+    description: ""
+
+  - id: 23
+    sprite: 23
+    name: "Firebase"
+    description: ""
+
+  - id: 24
+    sprite: 24
+    name: "Platform Channels"
+    description: ""
+
+  - id: 25
+    sprite: 25
+    name: "Foreign function interface"
+    description: ""
+
+  - id: 26
+    sprite: 26
+    name: "C"
+    description: ""
+
+  - id: 27
+    sprite: 27
+    name: "C++"
+    description: ""
+
+  - id: 28
+    sprite: 28
+    name: "Go"
+    description: ""
+
+  - id: 29
+    sprite: 29
+    name: "Rust"
+    description: ""
+
+  - id: 30
+    sprite: 30
+    name: "JavaScript"
+    description: ""
+
+  - id: 31
+    sprite: 31
+    name: "Kotlin"
+    description: ""
+
+  - id: 32
+    sprite: 32
+    name: "Swift"
+    description: ""
+
+  - id: 33
+    sprite: 33
+    name: "Languages"
+    description: ""
+
+  - id: 34
+    sprite: 34
+    name: "English"
+    description: ""
+
+  - id: 35
+    sprite: 35
+    name: "Communication"
+    description: ""
+
+  - id: 36
+    sprite: 36
+    name: "Management"
+    description: ""
+
+  - id: 37
+    sprite: 37
+    name: "Mathematics"
+    description: ""
+
+  - id: 38
+    sprite: 38
+    name: "Placeholder"
+    description: ""
+
+  - id: 39
+    sprite: 39
+    name: "Placeholder"
+    description: ""
+
+  - id: 40
+    sprite: 40
+    name: "Placeholder"
+    description: ""
+
+  - id: 41
+    sprite: 41
+    name: "Placeholder"
+    description: ""
+
+  - id: 42
+    sprite: 42
+    name: "Placeholder"
+    description: ""
+
+  - id: 43
+    sprite: 43
+    name: "Placeholder"
+    description: ""
+
+  - id: 44
+    sprite: 44
+    name: "Placeholder"
+    description: ""
+
+  - id: 45
+    sprite: 45
+    name: "Placeholder"
+    description: ""
+
+  - id: 46
+    sprite: 46
+    name: "Placeholder"
+    description: ""
+
+  - id: 47
+    sprite: 47
+    name: "Placeholder"
+    description: ""
+
+  - id: 48
+    sprite: 48
+    name: "Placeholder"
+    description: ""
+
+  - id: 49
+    sprite: 49
+    name: "Placeholder"
+    description: ""
+
+  - id: 50
+    sprite: 50
+    name: "Placeholder"
+    description: ""
+
+  - id: 51
+    sprite: 51
+    name: "Placeholder"
+    description: ""
+
+  - id: 52
+    sprite: 52
+    name: "Placeholder"
+    description: ""
+
+  - id: 53
+    sprite: 53
+    name: "Placeholder"
+    description: ""
+
+  - id: 54
+    sprite: 54
+    name: "Placeholder"
+    description: ""
+
+  - id: 55
+    sprite: 55
+    name: "Placeholder"
+    description: ""
+
+  - id: 56
+    sprite: 56
+    name: "Placeholder"
+    description: ""
+
+  - id: 57
+    sprite: 57
+    name: "Placeholder"
+    description: ""
+
+  - id: 58
+    sprite: 58
+    name: "Placeholder"
+    description: ""
+
+  - id: 59
+    sprite: 59
+    name: "Placeholder"
+    description: ""
+
+  - id: 60
+    sprite: 60
+    name: "Placeholder"
+    description: ""
+
+  - id: 61
+    sprite: 61
+    name: "Placeholder"
+    description: ""
+
+  - id: 62
+    sprite: 62
+    name: "Placeholder"
+    description: ""
+
+  - id: 63
+    sprite: 63
+    name: "Bad Practices"
+    description: ""
+
+  - id: 64
+    sprite: 64
+    name: "Other"
+    description: ""

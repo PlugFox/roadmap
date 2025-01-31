@@ -1,5 +1,5 @@
-import 'package:roadmap/src/core/geometry.dart' as g;
 import 'package:roadmap/src/core/listenable.dart';
+import 'package:shared/shared.dart' as g show Offset, Rect, Size;
 
 /// View interface for the camera.
 abstract interface class CameraView implements Listenable {
@@ -83,6 +83,9 @@ class Camera with ChangeNotifier implements CameraView {
     notifyListeners();
     return true;
   }
+
+  // TODO(plugfox): Replace zoom for scale pixel art properly
+  // Mike Matiunin <plugfox@gmail.com>, 01 February 2025
 
   /// Change the zoom of the camera.
   /// The zoom level is between 0 and 1.

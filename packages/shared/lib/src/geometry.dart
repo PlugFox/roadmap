@@ -2,7 +2,7 @@ import 'dart:math' as math;
 import 'dart:typed_data' as td;
 
 import 'package:meta/meta.dart';
-import 'package:roadmap/src/core/util.dart';
+import 'package:shared/src/math.dart';
 
 /// Base class for [Size] and [Offset], which are both ways to describe
 /// a distance as a two-dimensional axis-aligned vector.

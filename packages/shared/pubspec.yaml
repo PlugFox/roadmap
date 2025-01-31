@@ -1,0 +1,20 @@
+name: shared
+description: Shared Models
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+
+# https://dart.dev/tools/pub/workspaces
+resolution: workspace
+
+dependencies:
+  # Utility
+  meta: any
+  convert: any
+  collection: any
+  vector_math: any
+
+  # Protobuf
+  protobuf: ^3.1.0

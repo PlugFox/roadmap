@@ -3,7 +3,7 @@ import 'dart:js_interop';
 
 import 'package:roadmap/src/core/camera.dart';
 import 'package:roadmap/src/core/engine.dart';
-import 'package:roadmap/src/core/geometry.dart';
+import 'package:shared/shared.dart' show Offset;
 import 'package:web/web.dart';
 
 /// Component that represents the camera layer.

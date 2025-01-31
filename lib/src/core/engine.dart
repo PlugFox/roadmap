@@ -4,8 +4,8 @@ import 'dart:js_interop';
 
 import 'package:l/l.dart';
 import 'package:roadmap/src/core/camera.dart';
-import 'package:roadmap/src/core/geometry.dart' as g;
 import 'package:roadmap/src/core/listenable.dart';
+import 'package:shared/shared.dart' as g show Offset, Size;
 import 'package:web/web.dart';
 
 // Rendering context

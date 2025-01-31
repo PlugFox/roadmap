@@ -39,12 +39,12 @@ issue_tracker: https://github.com/plugfox/roadmap/issues
 # ==============================================================================
 
 # https://dart.dev/tools/pub/workspaces
-#workspace:
-#  - packages/ui
+workspace:
+  - packages/shared
 
-#executables:
-#  - tool/roadmap_schema.dart
-#  - tool/roadmap_compile.dart
+executables:
+  - tool/schema.dart
+  - tool/compile.dart
 #  - tool/roadmap_fake.dart
 
 
@@ -70,6 +70,10 @@ dependencies:
   #path: any
   #convert: any
   vector_math: ^2.1.4
+
+  # Shared models and utils
+  shared:
+    path: packages/shared
 
   # Transport and serialization
   #flat_buffers: ^23.5.26

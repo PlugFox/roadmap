@@ -5,7 +5,7 @@ import 'dart:collection';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
-import 'package:roadmap/src/core/geometry.dart' as g show Rect;
+import 'package:shared/shared.dart' as g show Rect;
 
 /// View over a [Float32List] that represents a query result.
 extension type QuadTree$QueryResult._(Float32List _bytes) {

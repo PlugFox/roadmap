@@ -7,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:l/l.dart';
 import 'package:roadmap/src/core/atlas_painter.dart';
 import 'package:roadmap/src/core/engine.dart';
+import 'package:roadmap/src/core/quadtree.dart';
+import 'package:shared/shared.dart';
 import 'package:web/web.dart';
 
 class SkillsLayer implements Layer {
@@ -16,11 +18,15 @@ class SkillsLayer implements Layer {
   bool get isVisible => true;
   bool _dirty = false;
   bool _needRelayout = false;
+  _SkillsLayout? _layout;
 
   AtlasPainter? _atlasPainter;
 
   @override
   void mount(RenderContext context) {
+    // TODO(plugfox): Get boundary from roadmap
+    // Mike Matiunin <plugfox@gmail.com>, 01 February 2025
+    _layout = _SkillsLayout(boundary: context.camera.bound);
     context.camera.addListener(_onCameraChange);
     _dirty = true;
     _loadAtlas(context.ctxGL);
@@ -28,6 +34,7 @@ class SkillsLayer implements Layer {
 
   @override
   void unmount(RenderContext context) {
+    _layout?.clear();
     context.camera.removeListener(_onCameraChange);
   }
 
@@ -96,7 +103,10 @@ class SkillsLayer implements Layer {
 
     // Рисуем спрайты
     final painter = _atlasPainter;
-    if (painter == null) return;
+    if (painter == null) {
+      // TODO(plugfox): Draw loading indicator
+      return;
+    }
 
     // Подготовка данных для отрисовки
 
@@ -152,6 +162,16 @@ class SkillsLayer implements Layer {
       td.Float32List.fromList([viewport.width, viewport.height]),
     );
   }
+}
+
+class _SkillsLayout {
+  _SkillsLayout({
+    required Rect boundary,
+  }) : _quadTree = QuadTree(boundary: boundary);
+
+  final QuadTree _quadTree;
+
+  void clear() => _quadTree.clear();
 }
 
 // TODO(plugfox): QuadTree for object extraction
