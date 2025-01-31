@@ -2,7 +2,7 @@ import 'package:roadmap/src/core/geometry.dart' as g;
 import 'package:roadmap/src/core/listenable.dart';
 
 /// View interface for the camera.
-abstract interface class CameraView {
+abstract interface class CameraView implements Listenable {
   /// Camera position.
   g.Offset get position;
 

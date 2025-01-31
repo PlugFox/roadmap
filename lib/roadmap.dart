@@ -27,21 +27,10 @@ void main() => l.capture(
           // UI Tooltips ...
           // UI Skill ...
 
-          final clock = ClockLayer();
-          void setTime() {
-            final DateTime(:hour, :minute, :second) = DateTime.now();
-            clock.setTime(hour: hour, minute: minute, second: second);
-          }
-
-          setTime();
-          Timer.periodic(const Duration(seconds: 1), (_) => setTime());
-          final engine = RenderingEngine.instance
-            ..addLayer(clock)
-            ..start();
+          final _ = RenderingEngine.instance..start();
           l.i('Engine started');
           await _initialize();
           await app.loadLibrary();
-          engine.removeLayer(clock);
           app.runApp();
         },
         l.e,
@@ -57,5 +46,17 @@ void main() => l.capture(
     );
 
 Future<void> _initialize() async {
-  await Future<void>.delayed(const Duration(seconds: 3));
+  final clock = ClockLayer();
+  void setTime() {
+    final DateTime(:hour, :minute, :second) = DateTime.now();
+    clock.setTime(hour: hour, minute: minute, second: second);
+  }
+
+  setTime();
+  final timer = Timer.periodic(const Duration(seconds: 1), (_) => setTime());
+
+  RenderingEngine.instance.addLayer(clock);
+  await Future<void>.delayed(const Duration(milliseconds: 50));
+  timer.cancel(); // Stop the clock
+  RenderingEngine.instance.removeLayer(clock);
 }

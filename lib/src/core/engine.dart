@@ -5,6 +5,7 @@ import 'dart:js_interop';
 import 'package:l/l.dart';
 import 'package:roadmap/src/core/camera.dart';
 import 'package:roadmap/src/core/geometry.dart' as g;
+import 'package:roadmap/src/core/listenable.dart';
 import 'package:web/web.dart';
 
 // Rendering context
@@ -71,7 +72,7 @@ abstract interface class ResizableLayer implements Layer {
 }
 
 /// Rendering engine that manages layers and rendering.
-class RenderingEngine {
+class RenderingEngine with ChangeNotifier {
   RenderingEngine._({
     required ShadowRoot shadow,
     required HTMLDivElement container,
@@ -186,6 +187,7 @@ class RenderingEngine {
 
   // Rendering context
   final RenderContext _context;
+  RenderContext get context => _context;
 
   Timer? _healthCehckTimer;
 
@@ -228,6 +230,9 @@ class RenderingEngine {
   /// Tick the rendering engine.
   void _renderFrame(num currentTime) {
     if (!_isRunning) return;
+
+    /// Notify listeners about the new frame
+    notifyListeners();
 
     // Calculate delta time
     final deltaTime = (currentTime - _lastFrameTime) / 1000.0;
@@ -281,7 +286,9 @@ class RenderingEngine {
   }
 
   /// Dispose the rendering engine.
+  @override
   void dispose() {
+    super.dispose();
     stop();
     for (final layer in _layers) layer.unmount(_context);
     _layers.clear();

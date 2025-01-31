@@ -223,6 +223,9 @@ class Offset extends OffsetBase {
   /// ```
   Offset translate(double translateX, double translateY) => Offset(dx + translateX, dy + translateY);
 
+  /// Returns a new offset with new x and y components.
+  Offset copyWith({double? dx, double? dy}) => Offset(dx ?? this.dx, dy ?? this.dy);
+
   /// Unary negation operator.
   ///
   /// Returns an offset with the coordinates negated.
