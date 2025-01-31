@@ -1,4 +1,4 @@
 import 'package:web/web.dart' as web;
-import 'package:roadmap/app.dart';
+import 'package:roadmap/roadmap.dart' as roadmap;
 
-void main() => runApp();
+void main() => roadmap.main();
