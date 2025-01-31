@@ -35,6 +35,7 @@ class SkillsLayer implements Layer {
       final response = await http.get(Uri.base.resolve('assets/atlas.png'));
       if (response.statusCode != 200) throw Exception('Failed to load skills atlas: ${response.statusCode}');
       _atlasPainter = await AtlasPainter.fromBytes(context, response.bodyBytes, 'image/png');
+      _dirty = true;
     } on Object catch (error, stackTrace) {
       l.w('Failed to load skills atlas: $error', stackTrace);
       Timer(const Duration(seconds: 5), () => _loadAtlas(context));
