@@ -93,13 +93,13 @@ class SkillsLayer implements Layer {
       50, 200, 1000, 1000, // Третий объект
       for (var i = 3; i < 500; i++) 0, 0, 1000, 1000, // Объекты 4-500
     ]); */
-    const count = 4;
+    const count = 500;
     final instanceRects = td.Float32List(count * 4);
     var sqrtCount = math.sqrt(count).ceil();
     for (var i = 0; i < count; i++) {
       final row = i ~/ sqrtCount;
       final col = i % sqrtCount;
-      const spacing = 400.0, startX = 100.0, startY = 100.0, width = 1000.0, height = 1000.0;
+      const spacing = 200.0, startX = 100.0, startY = 100.0, width = 1000.0, height = 1000.0;
       instanceRects[i * 4 + 0] = startX + col * spacing;
       instanceRects[i * 4 + 1] = startY + row * spacing;
       instanceRects[i * 4 + 2] = width;
@@ -118,7 +118,7 @@ class SkillsLayer implements Layer {
       anim(0), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 1
       anim(1), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 2
       anim(2), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 2
-      for (var i = 3; i < count; i++) anim(i), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайты 4-count
+      for (var i = 3; i < count; i++) ...<double>[anim(i), 0 / aHeight, 100 / aWidth, 100 / aHeight], // спрайты 4-count
     ]);
 
     // Эффекты цвета
@@ -128,7 +128,7 @@ class SkillsLayer implements Layer {
       1.0, 1.0, 0, 0, // Первый: нормальная гамма (1.0), полностью непрозрачный (1.0)
       1.0, 0.5, 0, 0, // Второй: нормальная гамма (1.0), полупрозрачный (0.5)
       0.5, 1.0, 0, 0, // Третий: низкая гамма (0.5), полностью непрозрачный (1.0)
-      for (var i = 3; i < count; i++) 1.0, 1.0, 0, 0, // Спрайты 4-count
+      for (var i = 3; i < count; i++) ...<double>[1, 1, 0, 0], // Спрайты 4-count
     ]);
 
     // Рендеринг
