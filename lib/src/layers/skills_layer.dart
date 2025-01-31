@@ -153,3 +153,6 @@ class SkillsLayer implements Layer {
     );
   }
 }
+
+// TODO(plugfox): QuadTree for object extraction
+// Mike Matiunin <plugfox@gmail.com>, 31 January 2025
