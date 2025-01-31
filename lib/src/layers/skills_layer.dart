@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:math' as math;
 import 'dart:typed_data' as td;
 
 import 'package:http/http.dart' as http;
@@ -32,9 +33,9 @@ class SkillsLayer implements Layer {
   Future<void> _loadAtlas(WebGL2RenderingContext context) async {
     try {
       if (_atlasPainter != null) return;
-      final response = await http.get(Uri.base.resolve('assets/atlas.png'));
+      final response = await http.get(Uri.base.resolve('assets/atlas.webp'));
       if (response.statusCode != 200) throw Exception('Failed to load skills atlas: ${response.statusCode}');
-      _atlasPainter = await AtlasPainter.fromBytes(context, response.bodyBytes, 'image/png');
+      _atlasPainter = await AtlasPainter.fromBytes(context, response.bodyBytes, 'image/webp' /* 'image/png' */);
       _dirty = true;
     } on Object catch (error, stackTrace) {
       l.w('Failed to load skills atlas: $error', stackTrace);
@@ -54,7 +55,7 @@ class SkillsLayer implements Layer {
   @override
   void render(RenderContext context, double delta) {
     if (!_dirty) return; // Skip rendering if not dirty
-    _dirty = false;
+    //_dirty = false;
 
     final ctxGL = context.ctxGL;
     final ctx2D = context.ctx2D;
@@ -86,20 +87,38 @@ class SkillsLayer implements Layer {
 
     // Координаты объектов
     // x, y, width, height
-    final instanceRects = td.Float32List.fromList([
+    /* final instanceRects = td.Float32List.fromList([
       10, 20, 1000, 1000, // Первый объект
       300, 40, 1000, 1000, // Второй объект
       50, 200, 1000, 1000, // Третий объект
-    ]);
+      for (var i = 3; i < 500; i++) 0, 0, 1000, 1000, // Объекты 4-500
+    ]); */
+    const count = 4;
+    final instanceRects = td.Float32List(count * 4);
+    var sqrtCount = math.sqrt(count).ceil();
+    for (var i = 0; i < count; i++) {
+      final row = i ~/ sqrtCount;
+      final col = i % sqrtCount;
+      const spacing = 400.0, startX = 100.0, startY = 100.0, width = 1000.0, height = 1000.0;
+      instanceRects[i * 4 + 0] = startX + col * spacing;
+      instanceRects[i * 4 + 1] = startY + row * spacing;
+      instanceRects[i * 4 + 2] = width;
+      instanceRects[i * 4 + 3] = height;
+    }
 
+    // TODO(plugfox): Move to shader or painter
     const aWidth = 600, aHeight = 100; // Ширина и высота атласа
+
+    final ms = DateTime.now().millisecondsSinceEpoch ~/ 250; // Animation frame
+    double anim(int i) => ((ms + i) % 6) * 100.0 / aWidth;
 
     // Нормализация координат спрайтов в атласе
     // x, y, width, height
     final atlasRects = td.Float32List.fromList([
-      0 / aWidth, 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 1
-      100 / aWidth, 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 2
-      200 / aWidth, 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 2
+      anim(0), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 1
+      anim(1), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 2
+      anim(2), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайт 2
+      for (var i = 3; i < count; i++) anim(i), 0 / aHeight, 100 / aWidth, 100 / aHeight, // спрайты 4-count
     ]);
 
     // Эффекты цвета
@@ -109,6 +128,7 @@ class SkillsLayer implements Layer {
       1.0, 1.0, 0, 0, // Первый: нормальная гамма (1.0), полностью непрозрачный (1.0)
       1.0, 0.5, 0, 0, // Второй: нормальная гамма (1.0), полупрозрачный (0.5)
       0.5, 1.0, 0, 0, // Третий: низкая гамма (0.5), полностью непрозрачный (1.0)
+      for (var i = 3; i < count; i++) 1.0, 1.0, 0, 0, // Спрайты 4-count
     ]);
 
     // Рендеринг
