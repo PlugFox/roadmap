@@ -294,6 +294,11 @@ class _AtlasPainter implements AtlasPainter {
     Float32List resolution, // width, height экрана
   ) {
     final instanceCount = instanceRects.length ~/ 4;
+    assert(instanceCount * 4 == instanceRects.length, 'Неверное количество элементов в instanceRects');
+    assert(instanceCount * 4 == atlasRects.length, 'Неверное количество элементов в atlasRects');
+    assert(instanceCount * 4 == colorEffects.length, 'Неверное количество элементов в colorEffects');
+    assert(camera.length == 3, 'Неверное количество элементов в camera');
+    assert(resolution.length == 2, 'Неверное количество элементов в resolution');
 
     _gl.useProgram(_program);
 
