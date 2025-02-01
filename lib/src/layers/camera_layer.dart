@@ -40,7 +40,7 @@ class CameraLayer implements Layer {
     }
 
     _onKeyDownSubscription?.cancel();
-    _onKeyDownSubscription = EventStreamProviders.keyDownEvent.forTarget(element).listen((event) {
+    _onKeyDownSubscription = EventStreamProviders.keyDownEvent.forTarget(window).listen((event) {
       switch (event.key) {
         case ' ':
           _isSpaceDown = true;
@@ -64,7 +64,7 @@ class CameraLayer implements Layer {
       }
     }, cancelOnError: false);
     _onKeyUpSubscription?.cancel();
-    _onKeyUpSubscription = EventStreamProviders.keyUpEvent.forTarget(element).listen((event) {
+    _onKeyUpSubscription = EventStreamProviders.keyUpEvent.forTarget(window).listen((event) {
       switch (event.key) {
         case ' ':
           _isSpaceDown = false;
