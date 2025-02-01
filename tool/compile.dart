@@ -427,5 +427,7 @@ void _checkRoadmap(Roadmap roadmap) {
     io.stderr.writeln('! Warning: Skills have no description: ${skillsWithNoDescription.join(', ')}'); */
 }
 
-void _compileRoadmap(Roadmap roadmap) =>
-    io.File('web/assets/roadmap.bin').writeAsBytesSync(roadmapCodec.encode(roadmap), flush: true);
+void _compileRoadmap(Roadmap roadmap) => io.File('web/assets/roadmap.bin').writeAsBytesSync(
+      roadmapCodec.encode(roadmap),
+      flush: true,
+    );
