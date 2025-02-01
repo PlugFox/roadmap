@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:convert';
 
 import 'package:protobuf/protobuf.dart' as pb;
@@ -41,12 +40,7 @@ class RoadmapDecoder extends Converter<List<int>, Roadmap> {
               e.boundary.right,
               e.boundary.bottom,
             ),
-            color: Color.from(
-              alpha: e.color.a,
-              red: e.color.r,
-              green: e.color.g,
-              blue: e.color.b,
-            ),
+            color: e.hasColor() ? Color(e.color) : const Color(0xFF000000),
           ),
         )
         .toList(growable: false)
@@ -57,12 +51,7 @@ class RoadmapDecoder extends Converter<List<int>, Roadmap> {
             id: e.id,
             name: e.name,
             description: e.description,
-            color: Color.from(
-              alpha: e.color.a,
-              red: e.color.r,
-              green: e.color.g,
-              blue: e.color.b,
-            ),
+            color: e.hasColor() ? Color(e.color) : const Color(0xFF000000),
           ),
         )
         .toList(growable: false)
@@ -74,12 +63,7 @@ class RoadmapDecoder extends Converter<List<int>, Roadmap> {
             name: e.name,
             description: e.description,
             radius: e.radius,
-            color: Color.from(
-              alpha: e.color.a,
-              red: e.color.r,
-              green: e.color.g,
-              blue: e.color.b,
-            ),
+            color: e.hasColor() ? Color(e.color) : const Color(0xFF000000),
           ),
         )
         .toList(growable: false)
@@ -95,41 +79,30 @@ class RoadmapDecoder extends Converter<List<int>, Roadmap> {
         )
         .toList(growable: false)
       ..sort();
-    final skills = msg.skills
-        .map<Roadmap$Skill>(
-          (e) => Roadmap$Skill(
-            id: e.id,
-            name: e.name,
-            level: levels[e.level],
-            sprite: e.hasSprite() ? SkillSprite(e.sprite) : tags.first.sprite,
-            experience: switch (e.experience) {
-              > 0 => e.experience,
-              _ => (e.level + 1) * 10 * (e.notable ? 3 : 1),
-            },
-            notable: e.notable,
-            color: e.hasColor()
-                ? Color.from(
-                    alpha: e.color.a,
-                    red: e.color.r,
-                    green: e.color.g,
-                    blue: e.color.b,
-                  )
-                : ranks.first.color,
-            boundary: Rect.fromLTRB(
-              e.boundary.left,
-              e.boundary.top,
-              e.boundary.right,
-              e.boundary.bottom,
-            ),
-            parent: e.hasParent() ? e.parent : -1,
-            tags: e.tags.map<Roadmap$Tag>((e) => tags[e]).toSet(),
-            meta: HashMap<String, String>.of(e.meta),
-          ),
-        )
-        .toList(growable: false);
-    final skillsMap = <int, Roadmap$Skill>{
-      for (final skill in skills) skill.id: skill,
-    };
+
+    final maxId = msg.skills.fold<int>(0, (prev, e) => e.id > prev ? e.id : prev);
+    final skills = List<Roadmap$Skill>.filled(maxId, Roadmap$Skill.empty, growable: false);
+    for (final e in msg.skills) {
+      skills[e.id] = Roadmap$Skill(
+        id: e.id,
+        name: e.name,
+        level: levels[e.level],
+        sprite: e.hasSprite() ? SkillSprite(e.sprite) : null,
+        experience: e.hasExperience() ? e.experience : null,
+        notable: e.hasNotable() && e.notable,
+        color: e.hasColor() ? Color(e.color) : null,
+        boundary: Rect.fromLTRB(
+          e.boundary.left,
+          e.boundary.top,
+          e.boundary.right,
+          e.boundary.bottom,
+        ),
+        parent: e.hasParent() ? e.parent : -1,
+        tags: <Roadmap$Tag>[for (final id in e.tags) tags[id]],
+        meta: <String, String>{...e.meta},
+      );
+    }
+
     return Roadmap(
       version: msg.version,
       language: msg.hasLanguage() ? msg.language : 'en',
@@ -143,7 +116,7 @@ class RoadmapDecoder extends Converter<List<int>, Roadmap> {
       ranks: ranks,
       levels: levels,
       tags: tags,
-      skills: skillsMap,
+      skills: skills,
     );
   }
 }
@@ -174,12 +147,7 @@ class RoadmapEncoder extends Converter<Roadmap, List<int>> {
                 right: e.boundary.right,
                 bottom: e.boundary.bottom,
               ),
-              color: pb.Color(
-                a: e.color.a,
-                r: e.color.r,
-                g: e.color.g,
-                b: e.color.b,
-              ),
+              color: e.color.toARGB32(),
             ),
           )
           .toList(growable: false),
@@ -189,12 +157,7 @@ class RoadmapEncoder extends Converter<Roadmap, List<int>> {
               id: e.id,
               name: e.name,
               description: e.description,
-              color: pb.Color(
-                a: e.color.a,
-                r: e.color.r,
-                g: e.color.g,
-                b: e.color.b,
-              ),
+              color: e.color.toARGB32(),
             ),
           )
           .toList(growable: false),
@@ -205,12 +168,7 @@ class RoadmapEncoder extends Converter<Roadmap, List<int>> {
               name: e.name,
               description: e.description,
               radius: e.radius,
-              color: pb.Color(
-                a: e.color.a,
-                r: e.color.r,
-                g: e.color.g,
-                b: e.color.b,
-              ),
+              color: e.color.toARGB32(),
             ),
           )
           .toList(growable: false),
@@ -224,30 +182,25 @@ class RoadmapEncoder extends Converter<Roadmap, List<int>> {
             ),
           )
           .toList(growable: false),
-      skills: input.skills.values
+      skills: input.skills
           .map<pb.Skill>(
             (e) => pb.Skill(
               id: e.id,
               name: e.name,
               level: e.level.id,
-              sprite: e.sprite.id,
+              sprite: e.sprite?.id,
               experience: e.experience,
               notable: e.notable,
-              color: pb.Color(
-                a: e.color.a,
-                r: e.color.r,
-                g: e.color.g,
-                b: e.color.b,
-              ),
+              color: e.color?.toARGB32(),
               boundary: pb.Rect(
                 left: e.boundary.left,
                 top: e.boundary.top,
                 right: e.boundary.right,
                 bottom: e.boundary.bottom,
               ),
-              parent: e.parent == -1 ? null : e.parent,
+              parent: e.parent,
               tags: e.tags.map<int>((e) => e.id).toList(growable: false),
-              meta: Map<String, String>.of(e.meta),
+              meta: e.meta.isEmpty ? null : e.meta,
             ),
           )
           .toList(growable: false),

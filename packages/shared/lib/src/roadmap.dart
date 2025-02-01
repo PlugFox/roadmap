@@ -2,6 +2,7 @@ import 'package:meta/meta.dart';
 import 'package:shared/src/atlas.dart';
 import 'package:shared/src/color.dart';
 import 'package:shared/src/geometry.dart';
+import 'package:shared/src/optional.dart';
 
 @immutable
 final class Roadmap$Area implements Comparable<Roadmap$Area> {
@@ -155,9 +156,11 @@ final class Roadmap$Tag implements Comparable<Roadmap$Tag> {
   String toString() => 'Tag{id: $id, name: $name}';
 }
 
+/// Skill of the roadmap.
 @immutable
 final class Roadmap$Skill implements Comparable<Roadmap$Skill> {
-  Roadmap$Skill({
+  /// Roadmap skill constructor.
+  const Roadmap$Skill({
     required this.id,
     required this.name,
     required this.level,
@@ -169,7 +172,23 @@ final class Roadmap$Skill implements Comparable<Roadmap$Skill> {
     required this.parent,
     required this.tags,
     required this.meta,
-  }) : center = boundary.center;
+  });
+
+  /// Empty skill instance.
+  /// Used as a placeholder for missing skills.
+  static const Roadmap$Skill empty = Roadmap$Skill(
+    id: -1,
+    name: '',
+    level: Roadmap$Level(id: -1, name: '', description: '', radius: 0, color: Color(0)),
+    sprite: null,
+    experience: null,
+    notable: false,
+    color: null,
+    boundary: Rect.zero,
+    parent: null,
+    tags: [],
+    meta: {},
+  );
 
   /// Unique identifier of the skill.
   final int id;
@@ -182,16 +201,25 @@ final class Roadmap$Skill implements Comparable<Roadmap$Skill> {
 
   /// Sprite of the skill in the sprite atlas.
   /// Sprite is defined by the top-left corner.
-  final SkillSprite sprite;
+  final SkillSprite? sprite;
+
+  /// Whether the skill has a sprite.
+  bool get hasSprite => sprite != null;
 
   /// Experience gained from the skill.
-  final int experience;
+  final int? experience;
+
+  /// Whether the skill has experience.
+  bool get hasExperience => experience != null;
 
   /// Whether the skill is notable.
   final bool notable;
 
   /// Color of the skill.
-  final Color color;
+  final Color? color;
+
+  /// Whether the skill has a color.
+  bool get hasColor => color != null;
 
   /// Rectangle of the skill in the roadmap.
   /// Rectangle is defined by the top-left and bottom-right corners.
@@ -200,18 +228,16 @@ final class Roadmap$Skill implements Comparable<Roadmap$Skill> {
   /// Center of the skill in the roadmap.
   /// Center is defined as a Vector2 with x and y coordinates.
   /// x - center x coordinate, y - center y coordinate
-  final Offset center;
+  Offset get center => boundary.center;
 
   /// Prerequisite (parent) skill id if any.
-  /// If the skill has no parent, then the value is -1.
-  final int parent;
+  final int? parent;
 
   /// Whether the skill has a parent.
-  bool get hasParent => parent != -1;
+  bool get hasParent => parent != null;
 
   /// Tags of the skill.
-  /// Ordered set of tags that describe the skill.
-  final Set<Roadmap$Tag> tags;
+  final List<Roadmap$Tag> tags;
 
   /// Additional metadata of the skill.
   /// Metadata is defined as a unordered map of key-value pairs.
@@ -222,25 +248,25 @@ final class Roadmap$Skill implements Comparable<Roadmap$Skill> {
     int? id,
     String? name,
     Roadmap$Level? level,
-    SkillSprite? sprite,
-    int? experience,
+    Optional<SkillSprite>? sprite,
+    Optional<int>? experience,
     bool? notable,
-    Color? color,
+    Optional<Color>? color,
     Rect? boundary,
-    int? parent,
-    Set<Roadmap$Tag>? tags,
+    Optional<int>? parent,
+    List<Roadmap$Tag>? tags,
     Map<String, String>? meta,
   }) =>
       Roadmap$Skill(
         id: id ?? this.id,
         name: name ?? this.name,
         level: level ?? this.level,
-        sprite: sprite ?? this.sprite,
-        experience: experience ?? this.experience,
+        sprite: sprite != null ? sprite.value : this.sprite,
+        experience: experience != null ? experience.value : this.experience,
         notable: notable ?? this.notable,
-        color: color ?? this.color,
+        color: color != null ? color.value : this.color,
         boundary: boundary ?? this.boundary,
-        parent: parent ?? this.parent,
+        parent: parent != null ? parent.value : this.parent,
         tags: tags ?? this.tags,
         meta: meta ?? this.meta,
       );
@@ -306,7 +332,7 @@ final class Roadmap {
   final List<Roadmap$Tag> tags;
 
   /// Skills of the roadmap.
-  final Map<int, Roadmap$Skill> skills;
+  final List<Roadmap$Skill> skills;
 
   @override
   int get hashCode => version.hashCode;

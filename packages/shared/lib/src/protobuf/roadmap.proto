@@ -8,14 +8,6 @@ message Vector {
   float y = 2;
 }
 
-// Color (Vector4)
-message Color {
-  float r = 1;
-  float g = 2;
-  float b = 3;
-  float a = 4;
-}
-
 // Rectangle (Vector4)
 message Rect {
   float left = 1;
@@ -30,7 +22,7 @@ message Area {
   string name = 2;
   string description = 3;
   Rect boundary = 10;
-  Color color = 50;
+  uint32 color = 50;
 }
 
 // Rank
@@ -38,7 +30,7 @@ message Rank {
   uint32 id = 1;
   string name = 2;
   string description = 3;
-  Color color = 50;
+  uint32 color = 50;
 }
 
 // Level
@@ -47,7 +39,7 @@ message Level {
   string name = 2;
   string description = 3;
   float radius = 10;
-  Color color = 50;
+  uint32 color = 50;
 }
 
 // Tag
@@ -66,7 +58,7 @@ message Skill {
   uint32 sprite = 10;
   uint32 experience = 20;
   bool notable = 30;
-  Color color = 50;
+  uint32 color = 50;
   Rect boundary = 60;
   uint32 parent = 100;
   repeated uint32 tags = 200;

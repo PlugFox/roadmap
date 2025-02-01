@@ -78,99 +78,6 @@ class Vector extends $pb.GeneratedMessage {
   void clearY() => clearField(2);
 }
 
-/// Color (Vector4)
-class Color extends $pb.GeneratedMessage {
-  factory Color({
-    $core.double? r,
-    $core.double? g,
-    $core.double? b,
-    $core.double? a,
-  }) {
-    final $result = create();
-    if (r != null) {
-      $result.r = r;
-    }
-    if (g != null) {
-      $result.g = g;
-    }
-    if (b != null) {
-      $result.b = b;
-    }
-    if (a != null) {
-      $result.a = a;
-    }
-    return $result;
-  }
-  Color._() : super();
-  factory Color.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Color.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
-
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Color', package: const $pb.PackageName(_omitMessageNames ? '' : 'roadmap'), createEmptyInstance: create)
-    ..a<$core.double>(1, _omitFieldNames ? '' : 'r', $pb.PbFieldType.OF)
-    ..a<$core.double>(2, _omitFieldNames ? '' : 'g', $pb.PbFieldType.OF)
-    ..a<$core.double>(3, _omitFieldNames ? '' : 'b', $pb.PbFieldType.OF)
-    ..a<$core.double>(4, _omitFieldNames ? '' : 'a', $pb.PbFieldType.OF)
-    ..hasRequiredFields = false
-  ;
-
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
-  Color clone() => Color()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  Color copyWith(void Function(Color) updates) => super.copyWith((message) => updates(message as Color)) as Color;
-
-  $pb.BuilderInfo get info_ => _i;
-
-  @$core.pragma('dart2js:noInline')
-  static Color create() => Color._();
-  Color createEmptyInstance() => create();
-  static $pb.PbList<Color> createRepeated() => $pb.PbList<Color>();
-  @$core.pragma('dart2js:noInline')
-  static Color getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Color>(create);
-  static Color? _defaultInstance;
-
-  @$pb.TagNumber(1)
-  $core.double get r => $_getN(0);
-  @$pb.TagNumber(1)
-  set r($core.double v) { $_setFloat(0, v); }
-  @$pb.TagNumber(1)
-  $core.bool hasR() => $_has(0);
-  @$pb.TagNumber(1)
-  void clearR() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.double get g => $_getN(1);
-  @$pb.TagNumber(2)
-  set g($core.double v) { $_setFloat(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasG() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearG() => clearField(2);
-
-  @$pb.TagNumber(3)
-  $core.double get b => $_getN(2);
-  @$pb.TagNumber(3)
-  set b($core.double v) { $_setFloat(2, v); }
-  @$pb.TagNumber(3)
-  $core.bool hasB() => $_has(2);
-  @$pb.TagNumber(3)
-  void clearB() => clearField(3);
-
-  @$pb.TagNumber(4)
-  $core.double get a => $_getN(3);
-  @$pb.TagNumber(4)
-  set a($core.double v) { $_setFloat(3, v); }
-  @$pb.TagNumber(4)
-  $core.bool hasA() => $_has(3);
-  @$pb.TagNumber(4)
-  void clearA() => clearField(4);
-}
-
 /// Rectangle (Vector4)
 class Rect extends $pb.GeneratedMessage {
   factory Rect({
@@ -271,7 +178,7 @@ class Area extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? description,
     Rect? boundary,
-    Color? color,
+    $core.int? color,
   }) {
     final $result = create();
     if (id != null) {
@@ -300,7 +207,7 @@ class Area extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'description')
     ..aOM<Rect>(10, _omitFieldNames ? '' : 'boundary', subBuilder: Rect.create)
-    ..aOM<Color>(50, _omitFieldNames ? '' : 'color', subBuilder: Color.create)
+    ..a<$core.int>(50, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
 
@@ -364,15 +271,13 @@ class Area extends $pb.GeneratedMessage {
   Rect ensureBoundary() => $_ensure(3);
 
   @$pb.TagNumber(50)
-  Color get color => $_getN(4);
+  $core.int get color => $_getIZ(4);
   @$pb.TagNumber(50)
-  set color(Color v) { setField(50, v); }
+  set color($core.int v) { $_setUnsignedInt32(4, v); }
   @$pb.TagNumber(50)
   $core.bool hasColor() => $_has(4);
   @$pb.TagNumber(50)
   void clearColor() => clearField(50);
-  @$pb.TagNumber(50)
-  Color ensureColor() => $_ensure(4);
 }
 
 /// Rank
@@ -381,7 +286,7 @@ class Rank extends $pb.GeneratedMessage {
     $core.int? id,
     $core.String? name,
     $core.String? description,
-    Color? color,
+    $core.int? color,
   }) {
     final $result = create();
     if (id != null) {
@@ -406,7 +311,7 @@ class Rank extends $pb.GeneratedMessage {
     ..a<$core.int>(1, _omitFieldNames ? '' : 'id', $pb.PbFieldType.OU3)
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'description')
-    ..aOM<Color>(50, _omitFieldNames ? '' : 'color', subBuilder: Color.create)
+    ..a<$core.int>(50, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
 
@@ -459,15 +364,13 @@ class Rank extends $pb.GeneratedMessage {
   void clearDescription() => clearField(3);
 
   @$pb.TagNumber(50)
-  Color get color => $_getN(3);
+  $core.int get color => $_getIZ(3);
   @$pb.TagNumber(50)
-  set color(Color v) { setField(50, v); }
+  set color($core.int v) { $_setUnsignedInt32(3, v); }
   @$pb.TagNumber(50)
   $core.bool hasColor() => $_has(3);
   @$pb.TagNumber(50)
   void clearColor() => clearField(50);
-  @$pb.TagNumber(50)
-  Color ensureColor() => $_ensure(3);
 }
 
 /// Level
@@ -477,7 +380,7 @@ class Level extends $pb.GeneratedMessage {
     $core.String? name,
     $core.String? description,
     $core.double? radius,
-    Color? color,
+    $core.int? color,
   }) {
     final $result = create();
     if (id != null) {
@@ -506,7 +409,7 @@ class Level extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'name')
     ..aOS(3, _omitFieldNames ? '' : 'description')
     ..a<$core.double>(10, _omitFieldNames ? '' : 'radius', $pb.PbFieldType.OF)
-    ..aOM<Color>(50, _omitFieldNames ? '' : 'color', subBuilder: Color.create)
+    ..a<$core.int>(50, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OU3)
     ..hasRequiredFields = false
   ;
 
@@ -568,15 +471,13 @@ class Level extends $pb.GeneratedMessage {
   void clearRadius() => clearField(10);
 
   @$pb.TagNumber(50)
-  Color get color => $_getN(4);
+  $core.int get color => $_getIZ(4);
   @$pb.TagNumber(50)
-  set color(Color v) { setField(50, v); }
+  set color($core.int v) { $_setUnsignedInt32(4, v); }
   @$pb.TagNumber(50)
   $core.bool hasColor() => $_has(4);
   @$pb.TagNumber(50)
   void clearColor() => clearField(50);
-  @$pb.TagNumber(50)
-  Color ensureColor() => $_ensure(4);
 }
 
 /// Tag
@@ -681,7 +582,7 @@ class Skill extends $pb.GeneratedMessage {
     $core.int? sprite,
     $core.int? experience,
     $core.bool? notable,
-    Color? color,
+    $core.int? color,
     Rect? boundary,
     $core.int? parent,
     $core.Iterable<$core.int>? tags,
@@ -734,7 +635,7 @@ class Skill extends $pb.GeneratedMessage {
     ..a<$core.int>(10, _omitFieldNames ? '' : 'sprite', $pb.PbFieldType.OU3)
     ..a<$core.int>(20, _omitFieldNames ? '' : 'experience', $pb.PbFieldType.OU3)
     ..aOB(30, _omitFieldNames ? '' : 'notable')
-    ..aOM<Color>(50, _omitFieldNames ? '' : 'color', subBuilder: Color.create)
+    ..a<$core.int>(50, _omitFieldNames ? '' : 'color', $pb.PbFieldType.OU3)
     ..aOM<Rect>(60, _omitFieldNames ? '' : 'boundary', subBuilder: Rect.create)
     ..a<$core.int>(100, _omitFieldNames ? '' : 'parent', $pb.PbFieldType.OU3)
     ..p<$core.int>(200, _omitFieldNames ? '' : 'tags', $pb.PbFieldType.KU3)
@@ -818,15 +719,13 @@ class Skill extends $pb.GeneratedMessage {
   void clearNotable() => clearField(30);
 
   @$pb.TagNumber(50)
-  Color get color => $_getN(6);
+  $core.int get color => $_getIZ(6);
   @$pb.TagNumber(50)
-  set color(Color v) { setField(50, v); }
+  set color($core.int v) { $_setUnsignedInt32(6, v); }
   @$pb.TagNumber(50)
   $core.bool hasColor() => $_has(6);
   @$pb.TagNumber(50)
   void clearColor() => clearField(50);
-  @$pb.TagNumber(50)
-  Color ensureColor() => $_ensure(6);
 
   @$pb.TagNumber(60)
   Rect get boundary => $_getN(7);

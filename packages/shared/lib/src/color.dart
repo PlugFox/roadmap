@@ -171,15 +171,14 @@ class Color {
   /// * Bits 16-23 are the red value.
   /// * Bits 8-15 are the green value.
   /// * Bits 0-7 are the blue value.
-  @Deprecated('Use component accessors like .r or .g.')
-  int get value => _floatToInt8(a) << 24 | _floatToInt8(r) << 16 | _floatToInt8(g) << 8 | _floatToInt8(b) << 0;
+  int toARGB32() => _floatToInt8(a) << 24 | _floatToInt8(r) << 16 | _floatToInt8(g) << 8 | _floatToInt8(b) << 0;
 
   /// The alpha channel of this color in an 8 bit value.
   ///
   /// A value of 0 means this color is fully transparent. A value of 255 means
   /// this color is fully opaque.
   @Deprecated('Use .a.')
-  int get alpha => (0xff000000 & value) >> 24;
+  int get alpha => (0xff000000 & toARGB32()) >> 24;
 
   /// The alpha channel of this color as a double.
   ///
@@ -190,15 +189,15 @@ class Color {
 
   /// The red channel of this color in an 8 bit value.
   @Deprecated('Use .r.')
-  int get red => (0x00ff0000 & value) >> 16;
+  int get red => (0x00ff0000 & toARGB32()) >> 16;
 
   /// The green channel of this color in an 8 bit value.
   @Deprecated('Use .g.')
-  int get green => (0x0000ff00 & value) >> 8;
+  int get green => (0x0000ff00 & toARGB32()) >> 8;
 
   /// The blue channel of this color in an 8 bit value.
   @Deprecated('Use .b.')
-  int get blue => (0x000000ff & value) >> 0;
+  int get blue => (0x000000ff & toARGB32()) >> 0;
 
   /// Returns a new color that matches this color with the passed in components
   /// changed.

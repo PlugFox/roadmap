@@ -26,22 +26,6 @@ const Vector$json = {
 final $typed_data.Uint8List vectorDescriptor = $convert.base64Decode(
     'CgZWZWN0b3ISDAoBeBgBIAEoAlIBeBIMCgF5GAIgASgCUgF5');
 
-@$core.Deprecated('Use colorDescriptor instead')
-const Color$json = {
-  '1': 'Color',
-  '2': [
-    {'1': 'r', '3': 1, '4': 1, '5': 2, '10': 'r'},
-    {'1': 'g', '3': 2, '4': 1, '5': 2, '10': 'g'},
-    {'1': 'b', '3': 3, '4': 1, '5': 2, '10': 'b'},
-    {'1': 'a', '3': 4, '4': 1, '5': 2, '10': 'a'},
-  ],
-};
-
-/// Descriptor for `Color`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List colorDescriptor = $convert.base64Decode(
-    'CgVDb2xvchIMCgFyGAEgASgCUgFyEgwKAWcYAiABKAJSAWcSDAoBYhgDIAEoAlIBYhIMCgFhGA'
-    'QgASgCUgFh');
-
 @$core.Deprecated('Use rectDescriptor instead')
 const Rect$json = {
   '1': 'Rect',
@@ -66,7 +50,7 @@ const Area$json = {
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
     {'1': 'description', '3': 3, '4': 1, '5': 9, '10': 'description'},
     {'1': 'boundary', '3': 10, '4': 1, '5': 11, '6': '.roadmap.Rect', '10': 'boundary'},
-    {'1': 'color', '3': 50, '4': 1, '5': 11, '6': '.roadmap.Color', '10': 'color'},
+    {'1': 'color', '3': 50, '4': 1, '5': 13, '10': 'color'},
   ],
 };
 
@@ -74,7 +58,7 @@ const Area$json = {
 final $typed_data.Uint8List areaDescriptor = $convert.base64Decode(
     'CgRBcmVhEg4KAmlkGAEgASgNUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEiAKC2Rlc2NyaXB0aW'
     '9uGAMgASgJUgtkZXNjcmlwdGlvbhIpCghib3VuZGFyeRgKIAEoCzINLnJvYWRtYXAuUmVjdFII'
-    'Ym91bmRhcnkSJAoFY29sb3IYMiABKAsyDi5yb2FkbWFwLkNvbG9yUgVjb2xvcg==');
+    'Ym91bmRhcnkSFAoFY29sb3IYMiABKA1SBWNvbG9y');
 
 @$core.Deprecated('Use rankDescriptor instead')
 const Rank$json = {
@@ -83,15 +67,14 @@ const Rank$json = {
     {'1': 'id', '3': 1, '4': 1, '5': 13, '10': 'id'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
     {'1': 'description', '3': 3, '4': 1, '5': 9, '10': 'description'},
-    {'1': 'color', '3': 50, '4': 1, '5': 11, '6': '.roadmap.Color', '10': 'color'},
+    {'1': 'color', '3': 50, '4': 1, '5': 13, '10': 'color'},
   ],
 };
 
 /// Descriptor for `Rank`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List rankDescriptor = $convert.base64Decode(
     'CgRSYW5rEg4KAmlkGAEgASgNUgJpZBISCgRuYW1lGAIgASgJUgRuYW1lEiAKC2Rlc2NyaXB0aW'
-    '9uGAMgASgJUgtkZXNjcmlwdGlvbhIkCgVjb2xvchgyIAEoCzIOLnJvYWRtYXAuQ29sb3JSBWNv'
-    'bG9y');
+    '9uGAMgASgJUgtkZXNjcmlwdGlvbhIUCgVjb2xvchgyIAEoDVIFY29sb3I=');
 
 @$core.Deprecated('Use levelDescriptor instead')
 const Level$json = {
@@ -101,15 +84,15 @@ const Level$json = {
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
     {'1': 'description', '3': 3, '4': 1, '5': 9, '10': 'description'},
     {'1': 'radius', '3': 10, '4': 1, '5': 2, '10': 'radius'},
-    {'1': 'color', '3': 50, '4': 1, '5': 11, '6': '.roadmap.Color', '10': 'color'},
+    {'1': 'color', '3': 50, '4': 1, '5': 13, '10': 'color'},
   ],
 };
 
 /// Descriptor for `Level`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List levelDescriptor = $convert.base64Decode(
     'CgVMZXZlbBIOCgJpZBgBIAEoDVICaWQSEgoEbmFtZRgCIAEoCVIEbmFtZRIgCgtkZXNjcmlwdG'
-    'lvbhgDIAEoCVILZGVzY3JpcHRpb24SFgoGcmFkaXVzGAogASgCUgZyYWRpdXMSJAoFY29sb3IY'
-    'MiABKAsyDi5yb2FkbWFwLkNvbG9yUgVjb2xvcg==');
+    'lvbhgDIAEoCVILZGVzY3JpcHRpb24SFgoGcmFkaXVzGAogASgCUgZyYWRpdXMSFAoFY29sb3IY'
+    'MiABKA1SBWNvbG9y');
 
 @$core.Deprecated('Use tagDescriptor instead')
 const Tag$json = {
@@ -137,7 +120,7 @@ const Skill$json = {
     {'1': 'sprite', '3': 10, '4': 1, '5': 13, '10': 'sprite'},
     {'1': 'experience', '3': 20, '4': 1, '5': 13, '10': 'experience'},
     {'1': 'notable', '3': 30, '4': 1, '5': 8, '10': 'notable'},
-    {'1': 'color', '3': 50, '4': 1, '5': 11, '6': '.roadmap.Color', '10': 'color'},
+    {'1': 'color', '3': 50, '4': 1, '5': 13, '10': 'color'},
     {'1': 'boundary', '3': 60, '4': 1, '5': 11, '6': '.roadmap.Rect', '10': 'boundary'},
     {'1': 'parent', '3': 100, '4': 1, '5': 13, '10': 'parent'},
     {'1': 'tags', '3': 200, '4': 3, '5': 13, '10': 'tags'},
@@ -160,11 +143,11 @@ const Skill_MetaEntry$json = {
 final $typed_data.Uint8List skillDescriptor = $convert.base64Decode(
     'CgVTa2lsbBIOCgJpZBgBIAEoDVICaWQSEgoEbmFtZRgCIAEoCVIEbmFtZRIUCgVsZXZlbBgFIA'
     'EoDVIFbGV2ZWwSFgoGc3ByaXRlGAogASgNUgZzcHJpdGUSHgoKZXhwZXJpZW5jZRgUIAEoDVIK'
-    'ZXhwZXJpZW5jZRIYCgdub3RhYmxlGB4gASgIUgdub3RhYmxlEiQKBWNvbG9yGDIgASgLMg4ucm'
-    '9hZG1hcC5Db2xvclIFY29sb3ISKQoIYm91bmRhcnkYPCABKAsyDS5yb2FkbWFwLlJlY3RSCGJv'
-    'dW5kYXJ5EhYKBnBhcmVudBhkIAEoDVIGcGFyZW50EhMKBHRhZ3MYyAEgAygNUgR0YWdzEi0KBG'
-    '1ldGEY9AMgAygLMhgucm9hZG1hcC5Ta2lsbC5NZXRhRW50cnlSBG1ldGEaNwoJTWV0YUVudHJ5'
-    'EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUgV2YWx1ZToCOAE=');
+    'ZXhwZXJpZW5jZRIYCgdub3RhYmxlGB4gASgIUgdub3RhYmxlEhQKBWNvbG9yGDIgASgNUgVjb2'
+    'xvchIpCghib3VuZGFyeRg8IAEoCzINLnJvYWRtYXAuUmVjdFIIYm91bmRhcnkSFgoGcGFyZW50'
+    'GGQgASgNUgZwYXJlbnQSEwoEdGFncxjIASADKA1SBHRhZ3MSLQoEbWV0YRj0AyADKAsyGC5yb2'
+    'FkbWFwLlNraWxsLk1ldGFFbnRyeVIEbWV0YRo3CglNZXRhRW50cnkSEAoDa2V5GAEgASgJUgNr'
+    'ZXkSFAoFdmFsdWUYAiABKAlSBXZhbHVlOgI4AQ==');
 
 @$core.Deprecated('Use roadmapDescriptor instead')
 const Roadmap$json = {
