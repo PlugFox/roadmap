@@ -30,8 +30,17 @@ class CameraLayer implements Layer {
 
   @override
   void mount(RenderContext context) {
+    final element = document.getElementById('terminal-canvas');
+    if (element == null) return;
+
+    bool isAboveCanvas(MouseEvent event) {
+      final topElement = document.elementFromPoint(event.clientX, event.clientY);
+      if (topElement == null) return false;
+      return topElement.isA<HTMLCanvasElement>() || topElement.id == 'terminal-canvas';
+    }
+
     _onKeyDownSubscription?.cancel();
-    _onKeyDownSubscription = EventStreamProviders.keyDownEvent.forTarget(window).listen((event) {
+    _onKeyDownSubscription = EventStreamProviders.keyDownEvent.forTarget(element).listen((event) {
       switch (event.key) {
         case ' ':
           _isSpaceDown = true;
@@ -55,7 +64,7 @@ class CameraLayer implements Layer {
       }
     }, cancelOnError: false);
     _onKeyUpSubscription?.cancel();
-    _onKeyUpSubscription = EventStreamProviders.keyUpEvent.forTarget(window).listen((event) {
+    _onKeyUpSubscription = EventStreamProviders.keyUpEvent.forTarget(element).listen((event) {
       switch (event.key) {
         case ' ':
           _isSpaceDown = false;
@@ -77,7 +86,8 @@ class CameraLayer implements Layer {
 
     // Mouse down - start dragging
     _onMouseDownSubscription?.cancel();
-    _onMouseDownSubscription = EventStreamProviders.mouseDownEvent.forTarget(window).listen((event) {
+    _onMouseDownSubscription = EventStreamProviders.mouseDownEvent.forTarget(element).listen((event) {
+      if (!isAboveCanvas(event)) return;
       if (_isSpaceDown && (event.buttons & 0x01) != 0) {
         // Left mouse with space key pressed
         _isDragging = true;
@@ -102,7 +112,8 @@ class CameraLayer implements Layer {
 
     // Mouse move - drag the camera
     _onMouseMoveSubscription?.cancel();
-    _onMouseMoveSubscription = EventStreamProviders.mouseMoveEvent.forTarget(window).listen((event) {
+    _onMouseMoveSubscription = EventStreamProviders.mouseMoveEvent.forTarget(element).listen((event) {
+      if (!isAboveCanvas(event)) return;
       if (_isDragging && _lastMousePosition != null) {
         final newMousePosition = Offset(
           event.clientX.toDouble() / context.camera.zoom,
@@ -119,7 +130,7 @@ class CameraLayer implements Layer {
 
     // Mouse up - stop dragging
     _onMouseUpSubscription?.cancel();
-    _onMouseUpSubscription = EventStreamProviders.mouseUpEvent.forTarget(window).listen((event) {
+    _onMouseUpSubscription = EventStreamProviders.mouseUpEvent.forTarget(element).listen((event) {
       _isDragging = false;
       //event.preventDefault();
       //event.stopPropagation();
@@ -128,7 +139,8 @@ class CameraLayer implements Layer {
 
     // Wheel events
     _onWheelSubscription?.cancel();
-    _onWheelSubscription = EventStreamProviders.wheelEvent.forTarget(window).listen((event) {
+    _onWheelSubscription = EventStreamProviders.wheelEvent.forTarget(element).listen((event) {
+      if (!isAboveCanvas(event)) return;
       final camera = context.camera;
       if (event.ctrlKey) {
         camera.changeZoom(camera.zoom - event.deltaY / 1000);
@@ -151,7 +163,7 @@ class CameraLayer implements Layer {
     }, cancelOnError: false);
 
     _onTouchMoveSubscription?.cancel();
-    _onTouchMoveSubscription = EventStreamProviders.touchMoveEvent.forTarget(window).listen((event) {
+    _onTouchMoveSubscription = EventStreamProviders.touchMoveEvent.forTarget(element).listen((event) {
       if (event.touches.length == 0) return;
       //l.i('Touch move: ${event.touches.length}');
       //event.preventDefault();

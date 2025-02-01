@@ -18,6 +18,11 @@
       user-select: none;
     }
 
+    html {
+      transform: scale(1);
+      transform-origin: 0 0;
+    }
+
     html,
     body {
       width: 100%;
@@ -43,6 +48,22 @@
       overflow: hidden;
     }
   </style>
+
+  <script>
+    // Disable zooming
+    document.addEventListener("touchmove", function (event) {
+      if (event.scale !== 1) event.preventDefault();
+    }, { passive: false });
+    document.addEventListener("gesturestart",
+      (event) => event.preventDefault(),
+      { passive: false });
+    document.addEventListener("gesturechange",
+      (event) => event.preventDefault(),
+      { passive: false });
+    document.addEventListener("wheel", function (event) {
+      if (event.ctrlKey) event.preventDefault();
+    }, { passive: false });
+  </script>
 </head>
 
 <body>

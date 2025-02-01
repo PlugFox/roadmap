@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:l/l.dart';
 import 'package:roadmap/src/app.dart' deferred as app;
 import 'package:roadmap/src/core/engine.dart';
-import 'package:roadmap/src/layers/clock_layer.dart';
 
 /*
 final now = DateTime.now();
@@ -46,6 +45,7 @@ void main() => l.capture(
     );
 
 Future<void> _initialize() async {
+  /*
   final clock = ClockLayer();
   void setTime() {
     final DateTime(:hour, :minute, :second) = DateTime.now();
@@ -59,4 +59,5 @@ Future<void> _initialize() async {
   await Future<void>.delayed(const Duration(milliseconds: 50));
   timer.cancel(); // Stop the clock
   RenderingEngine.instance.removeLayer(clock);
+  */
 }
