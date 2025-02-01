@@ -87,7 +87,8 @@ class SkillsLayer implements Layer {
     // Очищаем и подготавливаем GL
     ctxGL
       ..viewport(0, 0, viewport.width.ceil(), viewport.height.ceil())
-      ..clear(WebGL2RenderingContext.COLOR_BUFFER_BIT);
+      ..clear(WebGL2RenderingContext.COLOR_BUFFER_BIT)
+      ..clearColor(0.0, 0.0, 0xAA / 255, 1.0);
 
     // Очищаем и подготавливаем 2D
     ctx2D

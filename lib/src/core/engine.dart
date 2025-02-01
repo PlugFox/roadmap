@@ -87,12 +87,15 @@ class RenderingEngine with ChangeNotifier {
 
   /// Singleton instance of the rendering engine.
   static RenderingEngine get instance => _instance ??= () {
-        final app = document.querySelector('#app');
-        if (app == null) throw StateError('Failed to find app element');
-        final children = app.children;
-        for (var i = children.length - 1; i >= 0; i--) children.item(i)!.remove();
+        final terminalCanvas = document.querySelector('#terminal-canvas');
+        if (terminalCanvas == null) throw StateError('Failed to find terminal canvas');
+        {
+          final collection = terminalCanvas.children;
+          final length = collection.length;
+          for (var i = length - 1; i >= 0; i--) collection.item(i)?.remove();
+        }
 
-        final shadow = app.attachShadow(ShadowRootInit(
+        final shadow = terminalCanvas.attachShadow(ShadowRootInit(
           mode: 'open',
           clonable: false,
           serializable: false,

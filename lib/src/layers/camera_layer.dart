@@ -35,23 +35,23 @@ class CameraLayer implements Layer {
       switch (event.key) {
         case ' ':
           _isSpaceDown = true;
-          event.preventDefault();
+        /* event.preventDefault(); */
         case 'ArrowUp':
-        case 'w':
+          /* case 'w': */
           _velocity = _velocity.copyWith(dy: -_speed / context.camera.zoom);
-          event.preventDefault();
+        //event.preventDefault();
         case 'ArrowDown':
-        case 's':
+          /* case 's': */
           _velocity = _velocity.copyWith(dy: _speed / context.camera.zoom);
-          event.preventDefault();
+        //event.preventDefault();
         case 'ArrowLeft':
-        case 'a':
+          /* case 'a': */
           _velocity = _velocity.copyWith(dx: -_speed / context.camera.zoom);
-          event.preventDefault();
+        //event.preventDefault();
         case 'ArrowRight':
-        case 'd':
+          /* case 'd': */
           _velocity = _velocity.copyWith(dx: _speed / context.camera.zoom);
-          event.preventDefault();
+        //event.preventDefault();
       }
     }, cancelOnError: false);
     _onKeyUpSubscription?.cancel();
@@ -59,19 +59,19 @@ class CameraLayer implements Layer {
       switch (event.key) {
         case ' ':
           _isSpaceDown = false;
-          event.preventDefault();
+        //event.preventDefault();
         case 'ArrowUp':
         case 'ArrowDown':
-        case 'w':
-        case 's':
+          /* case 'w':
+        case 's': */
           _velocity = _velocity.copyWith(dy: 0);
-          event.preventDefault();
+        //event.preventDefault();
         case 'ArrowLeft':
         case 'ArrowRight':
-        case 'a':
-        case 'd':
+          /* case 'a':
+        case 'd': */
           _velocity = _velocity.copyWith(dx: 0);
-          event.preventDefault();
+        //event.preventDefault();
       }
     }, cancelOnError: false);
 
@@ -85,7 +85,7 @@ class CameraLayer implements Layer {
           event.clientX.toDouble() / context.camera.zoom,
           event.clientY.toDouble() / context.camera.zoom,
         );
-        event.preventDefault();
+        //event.preventDefault();
         //event.stopPropagation();
       }
       if ((event.buttons & 0x04) != 0) {
@@ -95,7 +95,7 @@ class CameraLayer implements Layer {
           event.clientX.toDouble() / context.camera.zoom,
           event.clientY.toDouble() / context.camera.zoom,
         );
-        event.preventDefault();
+        //event.preventDefault();
         //event.stopPropagation();
       }
     }, cancelOnError: false);
@@ -112,7 +112,7 @@ class CameraLayer implements Layer {
         _lastMousePosition = newMousePosition;
         final camera = context.camera;
         camera.moveTo(camera.position - delta);
-        event.preventDefault();
+        //event.preventDefault();
         //event.stopPropagation();
       }
     }, cancelOnError: false);
@@ -121,7 +121,7 @@ class CameraLayer implements Layer {
     _onMouseUpSubscription?.cancel();
     _onMouseUpSubscription = EventStreamProviders.mouseUpEvent.forTarget(window).listen((event) {
       _isDragging = false;
-      event.preventDefault();
+      //event.preventDefault();
       //event.stopPropagation();
       //l.i('Mouse up');
     }, cancelOnError: false);
@@ -132,7 +132,7 @@ class CameraLayer implements Layer {
       final camera = context.camera;
       if (event.ctrlKey) {
         camera.changeZoom(camera.zoom - event.deltaY / 1000);
-        event.preventDefault();
+        //event.preventDefault();
         //event.stopPropagation();
       } else {
         final deltaX = event.deltaX, deltaY = event.deltaY;
@@ -145,7 +145,7 @@ class CameraLayer implements Layer {
         //if (offset.distanceSquared < 1) return;
         //l.i('Wheel: ${event.deltaX}, ${event.deltaY}');
         camera.moveTo(camera.position + offset);
-        event.preventDefault();
+        //event.preventDefault();
         //event.stopPropagation();
       }
     }, cancelOnError: false);
@@ -154,7 +154,7 @@ class CameraLayer implements Layer {
     _onTouchMoveSubscription = EventStreamProviders.touchMoveEvent.forTarget(window).listen((event) {
       if (event.touches.length == 0) return;
       //l.i('Touch move: ${event.touches.length}');
-      event.preventDefault();
+      //event.preventDefault();
     }, cancelOnError: false);
   }
 

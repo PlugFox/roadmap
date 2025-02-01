@@ -22,6 +22,16 @@
     body {
       width: 100%;
       height: 100%;
+      margin: 0;
+      padding: 0;
+
+      background-color: #0000AA;
+      color: #00FF00;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 16px;
+      /* white-space: pre-wrap; */
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     #app {
@@ -30,13 +40,57 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: lightblue;
+      overflow: hidden;
     }
   </style>
 </head>
 
 <body>
-  <div id="app"></div>
+  <div id="app" class="terminal-window">
+    <!-- Верхнее меню -->
+    <div id="app-header" class="menu-bar">
+      <div class="menu-item">File
+        <div class="dropdown">
+          <div>New File</div>
+          <div>Open</div>
+          <div>Save</div>
+          <div>Exit</div>
+        </div>
+      </div>
+      <div class="menu-item">Edit
+        <div class="dropdown">
+          <div>Copy</div>
+          <div>Paste</div>
+          <div>Delete</div>
+        </div>
+      </div>
+      <div class="menu-item">View
+        <div class="dropdown">
+          <div>Zoom In</div>
+          <div>Zoom Out</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Основное окно -->
+    <div id="app-body">
+      <div id="terminal-canvas">
+      </div>
+    </div>
+
+    <!-- Нижнее меню -->
+    <div id="app-footer" class="menu-bar">
+      <div>F1 Help</div>
+      <div>F2 Rename</div>
+      <div>F3 View</div>
+      <div>F4 Edit</div>
+      <div>F5 Copy</div>
+      <div>F6 Move</div>
+      <div>F7 New</div>
+      <div>F8 Delete</div>
+      <div>F10 Quit</div>
+    </div>
+  </div>
 
   <script defer src="main.dart.js"></script>
 </body>

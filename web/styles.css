@@ -1,14 +1,103 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
-
-html, body {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: 'Roboto', sans-serif;
+.terminal-window {
+    background-color: #0000AA;
+    overflow: hidden;
 }
 
-#output {
-  padding: 20px;
-  text-align: center;
+.blinking-cursor::after {
+    content: "_";
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.ncurses-box {
+    border: 2px solid #00FF00;
+    padding: 5px;
+    width: fit-content;
+    display: inline-block;
+}
+
+/* Menu bar */
+
+#app-header {
+    border-bottom: 4px double white;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+#app-footer {
+    border-top: 4px double white;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    z-index: 1000;
+    justify-content: space-around;
+}
+
+#app-footer div {
+    width: 100px;
+    text-align: center;
+}
+
+.menu-bar {
+    background-color: #00AAAA;
+    color: black;
+    display: flex;
+    justify-content: start;
+    gap: 10px;
+    z-index: 1000;
+    padding: 3px;
+
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.menu-item {
+    position: relative;
+    padding: 2px 8px;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background-color: #7777FF;
+}
+
+.dropdown {
+    display: none;
+    position: absolute;
+    background-color: #5555FF;
+    border: 1px solid #AAAAFF;
+    padding: 5px;
+    left: 0;
+    top: 20px;
+    min-width: 120px;
+}
+
+.menu-item:hover .dropdown {
+    display: block;
+}
+
+.dropdown div {
+    padding: 2px 8px;
+}
+
+.dropdown div:hover {
+    background-color: #7777FF;
+}
+
+/* Content */
+
+#app-body {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 500;
 }
