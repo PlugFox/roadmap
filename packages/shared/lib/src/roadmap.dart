@@ -178,7 +178,7 @@ final class Roadmap$Skill implements Comparable<Roadmap$Skill> {
   /// Used as a placeholder for missing skills.
   static const Roadmap$Skill empty = Roadmap$Skill(
     id: -1,
-    name: '',
+    name: 'Unknown',
     level: Roadmap$Level(id: -1, name: '', description: '', radius: 0, color: Color(0)),
     sprite: null,
     experience: null,
@@ -189,6 +189,9 @@ final class Roadmap$Skill implements Comparable<Roadmap$Skill> {
     tags: [],
     meta: {},
   );
+
+  /// Whether the skill is valid (has a positive id).
+  bool get isValid => id >= 0;
 
   /// Unique identifier of the skill.
   final int id;
