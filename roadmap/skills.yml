@@ -1,0 +1,5 @@
+skills:
+  - id: 0
+    name: 'Skill Name'
+    level: 0
+    tags: [0]

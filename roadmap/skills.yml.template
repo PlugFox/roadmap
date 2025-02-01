@@ -1,0 +1,13 @@
+skills:
+  - id: uint32
+    name: String
+    level: uint32
+    tags: [uint32]
+    parent: uint32 | null
+    notable: bool | null
+    sprite: uint32 | null
+    color: uint32 | hex | null
+    exp: uint32 | null
+    meta:
+      - key: String
+        value: String

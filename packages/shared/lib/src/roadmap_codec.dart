@@ -183,6 +183,7 @@ class RoadmapEncoder extends Converter<Roadmap, List<int>> {
           )
           .toList(growable: false),
       skills: input.skills
+          .where((e) => e.isValid)
           .map<pb.Skill>(
             (e) => pb.Skill(
               id: e.id,

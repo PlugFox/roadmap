@@ -1,4 +1,4 @@
 coordinates:
-  - id: 0
-    x: 0
-    y: 0
+  - id: uint32
+    x: number
+    y: number

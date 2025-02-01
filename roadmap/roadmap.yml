@@ -16,24 +16,17 @@ boundary:
   height: 10000
 
 
-# The size of the sprite atlas in pixels.
-atlas:
-  width: 512
-  height: 512
-  sprite: 32
-
-
 # Areas of the roadmap.
 areas:
-  #- id: int
-  #  name: string
-  #  description: string
-  #  color: int | hex | string
-  #  boundary:
-  #    left: float
-  #    top: float
-  #    width: float
-  #    height: float
+  # - id: uint32
+  #   name: string
+  #   description: string
+  #   color: uint32 | hex | string
+  #   boundary:
+  #     left: number
+  #     top: number
+  #     width: number
+  #     height: number
 
   - id: 0
     name: "Default"
@@ -49,10 +42,10 @@ areas:
 # Rank names and colors.
 # F | E | D | C | B | A | S | SS | SSS
 ranks:
-  #- id: int
+  #- id: uint32
   #  name: string
   #  description: string
-  #  color: int | hex | string
+  #  color: uint32 | hex | string
 
   # Basic
   - id: 0
@@ -112,6 +105,12 @@ ranks:
 # Levels:
 # Basic | Beginner | Intermediate | Experienced | Advanced | Senior | Expert | Master | Legend
 levels:
+  # - id: uint32
+  #   name: string
+  #   description: string
+  #   radius: number
+  #   color: uint32 | hex | string
+
   - id: 0
     name: "Basic"
     description: "Basic"
@@ -171,6 +170,11 @@ levels:
 # Id of the tag is used in the skills section and also its the position of the sprite in the sprite atlas.
 # Sprite position is calculated as follows: x = id % 32 * 32, y = id ~/ 32 * 32
 tags:
+  # - id: uint32
+  #   sprite: uint32
+  #   name: string
+  #   description: string
+
   - id: 0
     sprite: 0
     name: "Dart Core"

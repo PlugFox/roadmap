@@ -60,6 +60,56 @@ class Color {
   /// green, and `00` for the blue).
   const Color(int value) : this._fromARGBC(value >> 24, value >> 16, value >> 8, value);
 
+  /// Color from a string with a leading `#` character.
+  /// For example:
+  /// ```dart
+  /// Color.fromHex('#42A5F5');
+  /// Color.fromHex('#FF42A5F5');
+  /// Color.fromHex('#F5');
+  /// Color.fromHex('#FF');
+  ///
+  /// ```
+  factory Color.fromHex(String hex) {
+    switch (hex.length) {
+      case 0 || 1:
+        throw ArgumentError.value(hex, 'hex', 'Hex color must not be empty');
+      // #AARRGGBB
+      case 9 when hex[0] == '#':
+        return Color.fromARGB(
+          int.parse(hex.substring(1, 3), radix: 16),
+          int.parse(hex.substring(3, 5), radix: 16),
+          int.parse(hex.substring(5, 7), radix: 16),
+          int.parse(hex.substring(7, 9), radix: 16),
+        );
+      // #RRGGBB
+      case 7 when hex[0] == '#':
+        return Color.fromARGB(
+          0xFF,
+          int.parse(hex.substring(1, 3), radix: 16),
+          int.parse(hex.substring(3, 5), radix: 16),
+          int.parse(hex.substring(5, 7), radix: 16),
+        );
+      // #ARGB
+      case 5 when hex[0] == '#':
+        return Color.fromARGB(
+          int.parse(hex.substring(1, 2), radix: 16),
+          int.parse(hex.substring(2, 3), radix: 16),
+          int.parse(hex.substring(3, 4), radix: 16),
+          int.parse(hex.substring(4, 5), radix: 16),
+        );
+      // #RGB
+      case 4 when hex[0] == '#':
+        return Color.fromARGB(
+          0xFF,
+          int.parse(hex.substring(1, 2), radix: 16),
+          int.parse(hex.substring(2, 3), radix: 16),
+          int.parse(hex.substring(3, 4), radix: 16),
+        );
+      default:
+        throw ArgumentError.value(hex, 'hex', 'Hex color must be in the format #AARRGGBB, #RRGGBB, #ARGB or #RGB');
+    }
+  }
+
   /// Combine the foreground color as a transparent color over top
   /// of a background color, and return the resulting combined color.
   ///
@@ -145,6 +195,24 @@ class Color {
         r = (r & 0xff) / 255,
         g = (g & 0xff) / 255,
         b = (b & 0xff) / 255;
+
+  /// Transparent color (alpha 0, RGB 0x000000).
+  static const Color transparent = Color(0x00000000);
+
+  /// Fully opaque black.
+  static const Color opaqueBlack = Color(0xFF000000);
+
+  /// Fully opaque white.
+  static const Color opaqueWhite = Color(0xFFFFFFFF);
+
+  /// Fully opaque red.
+  static const Color opaqueRed = Color(0xFFFF0000);
+
+  /// Fully opaque green.
+  static const Color opaqueGreen = Color(0xFF00FF00);
+
+  /// Fully opaque blue.
+  static const Color opaqueBlue = Color(0xFF0000FF);
 
   /// The alpha channel of this color.
   ///
