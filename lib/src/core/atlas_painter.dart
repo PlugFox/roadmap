@@ -121,7 +121,7 @@ class _AtlasPainter implements AtlasPainter {
   // Cached shader compilation results
   static final Map<String, web.WebGLShader> _shaderCache = <String, web.WebGLShader>{};
 
-  // Шейдеры
+  // Вершинный шейдер с поддержкой инстансинга
   static const String _vertexShaderSource = '''
     #version 300 es
 
