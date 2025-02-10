@@ -1,0 +1,37 @@
+#global_options:
+#  build_web_compilers|ddc:
+#    options:
+#      environment:
+#        dev: true
+
+targets:
+  $default:
+    sources:
+      - $package$
+      - pubspec.yaml
+      - lib/**
+      - test/**
+      - web/**
+    builders:
+      pubspec_generator:
+        options:
+          output: lib/src/core/pubspec.yaml.g.dart
+      #build_web_compilers:entrypoint:
+      #  options:
+      #    compiler: dart2js
+      #    dart2js_args:
+      #      - -O4
+      #  enabled: true
+      #  generate_for:
+      #    - web/stack_trace_mapper.dart
+      #build_web_compilers:_stack_trace_mapper_copy:
+      #  enabled: true
+      #build_web_compilers:sdk_js:
+      #  enabled: true
+
+#builders:
+#  constant_builder:
+#    import: "package:frontend/src/common/config/builder.dart"
+#    builder_factories: ["constantBuilder"]
+#    build_extensions:
+#      "$lib$": ["constants.g.dart"]

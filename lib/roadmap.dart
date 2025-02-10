@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:l/l.dart';
 import 'package:roadmap/src/app.dart' deferred as app;
 import 'package:roadmap/src/core/engine.dart';
+import 'package:roadmap/src/init/initialize_dependencies.dart';
 
 /*
 final now = DateTime.now();
@@ -27,10 +28,12 @@ void main() => l.capture(
           // UI Skill ...
 
           final _ = RenderingEngine.instance..start();
-          l.i('Engine started');
-          await _initialize();
+          l.d('Engine started');
+          final dependencies = await $initializeDependencies(
+            onProgress: (progress, message) {/* ... */},
+          );
           await app.loadLibrary();
-          app.runApp();
+          dependencies.inject(app.runApp);
         },
         l.e,
       ),
@@ -43,21 +46,3 @@ void main() => l.capture(
         messageFormatting: (message) => message,
       ),
     );
-
-Future<void> _initialize() async {
-  /*
-  final clock = ClockLayer();
-  void setTime() {
-    final DateTime(:hour, :minute, :second) = DateTime.now();
-    clock.setTime(hour: hour, minute: minute, second: second);
-  }
-
-  setTime();
-  final timer = Timer.periodic(const Duration(seconds: 1), (_) => setTime());
-
-  RenderingEngine.instance.addLayer(clock);
-  await Future<void>.delayed(const Duration(milliseconds: 50));
-  timer.cancel(); // Stop the clock
-  RenderingEngine.instance.removeLayer(clock);
-  */
-}
