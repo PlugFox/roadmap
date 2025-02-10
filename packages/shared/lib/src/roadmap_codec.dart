@@ -81,7 +81,7 @@ class RoadmapDecoder extends Converter<List<int>, Roadmap> {
       ..sort();
 
     final maxId = msg.skills.fold<int>(0, (prev, e) => e.id > prev ? e.id : prev);
-    final skills = List<Roadmap$Skill>.filled(maxId, Roadmap$Skill.empty, growable: false);
+    final skills = List<Roadmap$Skill>.filled(maxId + 1, Roadmap$Skill.empty, growable: false);
     for (final e in msg.skills) {
       skills[e.id] = Roadmap$Skill(
         id: e.id,

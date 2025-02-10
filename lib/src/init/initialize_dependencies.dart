@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 
 import 'package:http/http.dart' as http_lib;
 import 'package:l/l.dart';
@@ -8,6 +9,7 @@ import 'package:roadmap/src/init/app_metadata.dart';
 import 'package:roadmap/src/init/app_migrator.dart';
 import 'package:roadmap/src/init/dependencies.dart';
 import 'package:roadmap/src/init/platform/platform_initialization.dart';
+import 'package:shared/shared.dart';
 import 'package:web/web.dart';
 
 /// Initializes the app and returns a [Dependencies] object
@@ -59,11 +61,18 @@ final Map<String, _InitializationStep> _initializationSteps = <String, _Initiali
   'Receive storage': (dependencies) async => dependencies.storage = window.localStorage,
   'Migrate app from previous version': (dependencies) => AppMigrator.migrate(dependencies.storage),
   'Initialize HTTP client': (dependencies) => dependencies.http = http_lib.Client(),
-  'Load roadmap data': (dependencies) async {},
-  'Decode roadmap data': (dependencies) async {
-    /* final bytes = await AssetsUtil.loadBytes('assets/roadmap/roadmap.bin');
-    final roadmap = roadmapCodec.decode(bytes.buffer.asUint8List());
-    dependencies.roadmap = roadmap; */
+  'Load roadmap data': (dependencies) async {
+    final response = await dependencies.http.get(Uri.parse('assets/roadmap.bin'));
+    if (response.statusCode != 200) throw Exception('Failed to load roadmap data: ${response.statusCode}');
+    final bytes = response.bodyBytes;
+    if (bytes.isEmpty) throw Exception('Failed to load roadmap data: empty response');
+    try {
+      dependencies.roadmap = roadmapCodec.decode(bytes);
+    } on Object catch (error, stackTrace) {
+      debugger();
+      l.e('Failed to decode roadmap data: $error', stackTrace);
+      Error.throwWithStackTrace(FormatException('Failed to decode roadmap data: $error'), stackTrace);
+    }
   },
   'Receive roadmap atlas': (dependencies) async {
     /* final atlas = await AssetsUtil.loadImage('assets/roadmap/atlas.webp');

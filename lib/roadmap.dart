@@ -4,6 +4,7 @@ import 'package:l/l.dart';
 import 'package:roadmap/src/app.dart' deferred as app;
 import 'package:roadmap/src/core/engine.dart';
 import 'package:roadmap/src/init/initialize_dependencies.dart';
+import 'package:web/web.dart';
 
 /*
 final now = DateTime.now();
@@ -29,11 +30,17 @@ void main() => l.capture(
 
           final _ = RenderingEngine.instance..start();
           l.d('Engine started');
-          final dependencies = await $initializeDependencies(
-            onProgress: (progress, message) {/* ... */},
-          );
-          await app.loadLibrary();
-          dependencies.inject(app.runApp);
+          try {
+            final dependencies = await $initializeDependencies(
+              onProgress: (progress, message) {/* ... */},
+            );
+            await app.loadLibrary();
+            dependencies.inject(app.runApp);
+          } on Object catch (error, stackTrace) {
+            l.e('Failed to initialize app: $error', stackTrace);
+            window.alert('Failed to initialize app: $error');
+            return;
+          }
         },
         l.e,
       ),
