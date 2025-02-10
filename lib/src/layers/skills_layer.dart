@@ -23,6 +23,12 @@ class SkillsLayer implements Layer {
   AtlasPainter? _atlasPainter;
 
   @override
+  bool hitTest(_) => true;
+
+  @override
+  bool onEvent(_, __) => false;
+
+  @override
   void mount(RenderContext context) {
     // TODO(plugfox): Get boundary from roadmap
     // Mike Matiunin <plugfox@gmail.com>, 01 February 2025

@@ -11,6 +11,12 @@ class FpsLayer implements Layer {
   int _drawCalls = 0;
   double _lastFrameTime = 0;
 
+  @override
+  bool hitTest(_) => false;
+
+  @override
+  bool onEvent(_, __) => false;
+
   /// Metrics collection
   void _initMetrics() {
     _drawCalls = 0;

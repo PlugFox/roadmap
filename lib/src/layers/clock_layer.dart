@@ -16,6 +16,12 @@ class ClockLayer implements ResizableLayer {
   static final intl.DateFormat _timeFormat = intl.DateFormat('HH:mm:ss');
   int _fontSize = 32;
 
+  @override
+  bool hitTest(_) => false;
+
+  @override
+  bool onEvent(_, __) => false;
+
   /// Set the time to display on the clock.
   void setTime({
     required int hour,

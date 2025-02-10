@@ -3,8 +3,10 @@ import 'dart:async';
 import 'dart:js_interop';
 
 import 'package:l/l.dart';
+import 'package:meta/meta.dart';
 import 'package:roadmap/src/core/camera.dart';
 import 'package:roadmap/src/core/listenable.dart';
+import 'package:roadmap/src/core/user_event.dart';
 import 'package:shared/shared.dart' as g show Offset, Size;
 import 'package:web/web.dart';
 
@@ -52,6 +54,13 @@ abstract interface class Layer {
   /// Whether the layer is visible.
   bool get isVisible;
 
+  /// Used to determine if the layer was hit by the given position.
+  /// Returns true if the layer was hit, false otherwise.
+  bool hitTest(g.Offset position);
+
+  /// Called when the layer receives an event.
+  bool onEvent(RenderContext context, UserEvent event);
+
   /// Called when the layer is mounted.
   void mount(RenderContext context);
 
@@ -71,8 +80,30 @@ abstract interface class ResizableLayer implements Layer {
   void onResize(double width, double height);
 }
 
+abstract class _RenderingEngineBase implements Listenable {
+  const _RenderingEngineBase();
+
+  /// Rendering context.
+  abstract final RenderContext _context;
+
+  /// Layers managed by the rendering engine.
+  abstract final List<Layer> _layers;
+
+  @mustCallSuper
+  void start() {}
+
+  @mustCallSuper
+  void stop() {}
+
+  /// Internal update method.
+  /// Called by the rendering engine to update the scene.
+  @mustCallSuper
+  void _internalUpdate(double delta) {}
+}
+
 /// Rendering engine that manages layers and rendering.
-class RenderingEngine with ChangeNotifier {
+class RenderingEngine extends _RenderingEngineBase
+    with ChangeNotifier, _MouseBinding, _KeyboardBinding, _GamepadBinding {
   RenderingEngine._({
     required ShadowRoot shadow,
     required HTMLDivElement container,
@@ -186,6 +217,8 @@ class RenderingEngine with ChangeNotifier {
 
   final ShadowRoot _shadow;
   final HTMLDivElement _container;
+
+  @override
   final List<Layer> _layers;
 
   bool _isClosed = false;
@@ -193,6 +226,7 @@ class RenderingEngine with ChangeNotifier {
   double _lastFrameTime = 0;
 
   // Rendering context
+  @override
   final RenderContext _context;
   RenderContext get context => _context;
 
@@ -249,6 +283,8 @@ class RenderingEngine with ChangeNotifier {
     //_webGl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
     //_ctx2d.clearRect(0, 0, _canvas.width, _canvas.height);
 
+    _internalUpdate(deltaTime);
+
     // Update and render all visible layers
     for (final layer in _layers) {
       if (!layer.isVisible) continue;
@@ -263,12 +299,15 @@ class RenderingEngine with ChangeNotifier {
   late final JSExportedDartFunction _renderFrameJS = _renderFrame.toJS;
 
   /// Start the rendering engine.
+  @override
   void start() {
     if (_isRunning) return;
 
     final container = _container;
 
     window.addEventListener('resize', _onResizeJS);
+
+    super.start(); // Super call
 
     // Health check
     _healthCehckTimer?.cancel();
@@ -286,7 +325,9 @@ class RenderingEngine with ChangeNotifier {
   }
 
   /// Stop the rendering engine.
+  @override
   void stop() {
+    super.stop(); // Super call
     _isRunning = false;
     window.removeEventListener('resize', _onResizeJS);
     _healthCehckTimer?.cancel();
@@ -310,5 +351,267 @@ class RenderingEngine with ChangeNotifier {
     }
     _isClosed = true;
     _instance = null;
+  }
+}
+
+mixin _MouseBinding on _RenderingEngineBase {
+  StreamSubscription<MouseEvent>? _onMouseDownSubscription;
+  StreamSubscription<MouseEvent>? _onMouseMoveSubscription;
+  StreamSubscription<MouseEvent>? _onMouseUpSubscription;
+  StreamSubscription<WheelEvent>? _onWheelSubscription;
+  StreamSubscription<TouchEvent>? _onTouchMoveSubscription;
+
+  /// Check if the mouse event is above the canvas.
+  bool _isAboveCanvas(UserPointerEvent event) {
+    final topElement = document.elementFromPoint(event.position.dx, event.position.dy);
+    if (topElement == null) return false;
+    return topElement.isA<HTMLCanvasElement>() || topElement.id == 'terminal-canvas';
+  }
+
+  /// Emit the event to the layers.
+  bool _emitMouseEvent(UIEvent ui, UserEvent user) {
+    var handled = false;
+    for (final layer in _layers.reversed) {
+      if (!layer.isVisible) continue;
+      if (user case UserPointerEvent pointer) {
+        if (!_isAboveCanvas(pointer)) continue;
+        if (!layer.hitTest(pointer.position)) continue;
+      }
+      handled |= layer.onEvent(_context, user);
+      if (handled) break; // Stop event propagation
+    }
+    if (handled) {
+      ui
+        ..preventDefault()
+        ..stopPropagation();
+    }
+    return handled;
+  }
+
+  /// Subscribe to mouse events.
+  void _resubscribeToMouseEvents() {
+    _unsubscribeFromMouseEvents();
+    final w = window;
+
+    // Mouse down - start dragging
+    _onMouseDownSubscription = EventStreamProviders.mouseDownEvent.forTarget(w).listen((event) {
+      final e = UserClickEvent(
+        position: g.Offset(event.clientX.toDouble(), event.clientY.toDouble()),
+        primary: (event.buttons & 0x01) != 0, // Left mouse button
+      );
+      _emitMouseEvent(event, e);
+    }, cancelOnError: false);
+
+    // Mouse move - drag the camera
+    _onMouseMoveSubscription = EventStreamProviders.mouseMoveEvent.forTarget(w).listen((event) {
+      final e = UserMouseEvent(
+        position: g.Offset(event.clientX.toDouble(), event.clientY.toDouble()),
+        delta: g.Offset(event.movementX.toDouble(), event.movementY.toDouble()),
+        primary: (event.buttons & 0x01) != 0, // Left mouse button
+        secondary: (event.buttons & 0x02) != 0, // Right mouse button
+        middle: (event.buttons & 0x04) != 0, // Middle mouse button
+      );
+      _emitMouseEvent(event, e);
+    }, cancelOnError: false);
+
+    // Mouse up - stop dragging
+    _onMouseUpSubscription = EventStreamProviders.mouseUpEvent.forTarget(w).listen((event) {
+      final e = UserMouseEvent(
+        position: g.Offset(event.clientX.toDouble(), event.clientY.toDouble()),
+        delta: g.Offset(event.movementX.toDouble(), event.movementY.toDouble()),
+        primary: (event.buttons & 0x01) != 0, // Left mouse button
+        secondary: (event.buttons & 0x02) != 0, // Right mouse button
+        middle: (event.buttons & 0x04) != 0, // Middle mouse button
+      );
+      _emitMouseEvent(event, e);
+    }, cancelOnError: false);
+
+    // Wheel events
+    _onWheelSubscription = EventStreamProviders.wheelEvent.forTarget(w).listen((event) {
+      if (event.ctrlKey) {
+        final e = UserZoomEvent(zoom: event.deltaY / 1000);
+        _emitMouseEvent(event, e);
+      } else {
+        final e = UserMouseEvent(
+          position: g.Offset(event.clientX.toDouble(), event.clientY.toDouble()),
+          delta: g.Offset(-event.deltaX.toDouble(), -event.deltaY.toDouble()),
+          primary: false,
+          secondary: false,
+          middle: true,
+        );
+        _emitMouseEvent(event, e);
+      }
+    }, cancelOnError: false);
+
+    // Touch move events
+    _onTouchMoveSubscription = EventStreamProviders.touchMoveEvent.forTarget(w).listen((event) {
+      final length = event.touches.length;
+      if (length != 1) return;
+      final touch = event.touches.item(0);
+      if (touch == null) return;
+      final e = UserClickEvent(
+        position: g.Offset(touch.clientX.toDouble(), touch.clientY.toDouble()),
+        primary: true,
+      );
+      _emitMouseEvent(event, e);
+    }, cancelOnError: false);
+  }
+
+  /// Unsubscribe from mouse events.
+  void _unsubscribeFromMouseEvents() {
+    _onMouseDownSubscription?.cancel();
+    _onMouseMoveSubscription?.cancel();
+    _onMouseUpSubscription?.cancel();
+    _onWheelSubscription?.cancel();
+    _onTouchMoveSubscription?.cancel();
+  }
+
+  @override
+  void start() {
+    super.start();
+    _resubscribeToMouseEvents();
+  }
+
+  @override
+  void stop() {
+    super.stop();
+    _unsubscribeFromMouseEvents();
+  }
+}
+
+mixin _KeyboardBinding on _RenderingEngineBase {
+  StreamSubscription<KeyboardEvent>? _onKeyDownSubscription;
+  StreamSubscription<KeyboardEvent>? _onKeyUpSubscription;
+
+  /// Emit the event to the layers.
+  bool _emitKeyboardEvent(UIEvent ui, UserEvent user) {
+    var handled = false;
+    for (final layer in _layers.reversed) {
+      if (!layer.isVisible) continue;
+      handled |= layer.onEvent(_context, user);
+      if (handled) break; // Stop event propagation
+    }
+    if (handled) {
+      ui
+        ..preventDefault()
+        ..stopPropagation();
+    }
+    return handled;
+  }
+
+  /// Subscribe to keyboard events.
+  void _resubscribeToKeyboardEvents() {
+    _unsubscribeFromKeyboardEvents();
+    _onKeyDownSubscription = EventStreamProviders.keyDownEvent.forTarget(window).listen((event) {
+      switch (event.key) {
+        case ' ':
+          // Handle space key
+          const e = UserKeyEvent.down(key: UserKeys.space);
+          _emitKeyboardEvent(event, e);
+        case 'ArrowUp':
+          // Handle arrow up key
+          const e = UserKeyEvent.down(key: UserKeys.up);
+          _emitKeyboardEvent(event, e);
+        case 'ArrowDown':
+          // Handle arrow down key
+          const e = UserKeyEvent.down(key: UserKeys.down);
+          _emitKeyboardEvent(event, e);
+        case 'ArrowLeft':
+          // Handle arrow left key
+          const e = UserKeyEvent.down(key: UserKeys.left);
+          _emitKeyboardEvent(event, e);
+        case 'ArrowRight':
+          // Handle arrow right key
+          const e = UserKeyEvent.down(key: UserKeys.right);
+          _emitKeyboardEvent(event, e);
+      }
+    }, cancelOnError: false);
+    _onKeyUpSubscription = EventStreamProviders.keyUpEvent.forTarget(window).listen((event) {
+      switch (event.key) {
+        case ' ':
+          const e = UserKeyEvent.up(key: UserKeys.space);
+          _emitKeyboardEvent(event, e);
+        case 'ArrowUp':
+          const e = UserKeyEvent.up(key: UserKeys.up);
+          _emitKeyboardEvent(event, e);
+        case 'ArrowDown':
+          const e = UserKeyEvent.up(key: UserKeys.down);
+          _emitKeyboardEvent(event, e);
+        case 'ArrowLeft':
+          const e = UserKeyEvent.up(key: UserKeys.left);
+          _emitKeyboardEvent(event, e);
+        case 'ArrowRight':
+          const e = UserKeyEvent.up(key: UserKeys.right);
+          _emitKeyboardEvent(event, e);
+      }
+    }, cancelOnError: false);
+  }
+
+  /// Unsubscribe from keyboard events.
+  void _unsubscribeFromKeyboardEvents() {
+    _onKeyDownSubscription?.cancel();
+    _onKeyUpSubscription?.cancel();
+  }
+
+  @override
+  void start() {
+    super.start();
+    _resubscribeToKeyboardEvents();
+  }
+
+  @override
+  void stop() {
+    super.stop();
+    _unsubscribeFromKeyboardEvents();
+  }
+}
+
+mixin _GamepadBinding on _RenderingEngineBase {
+  /// Emit the event to the layers.
+  bool _emitGamepadEvent(UserEvent user) {
+    var handled = false;
+    for (final layer in _layers.reversed) {
+      if (!layer.isVisible) continue;
+      handled |= layer.onEvent(_context, user);
+      if (handled) break; // Stop event propagation
+    }
+    return handled;
+  }
+
+  void _stickHandler(Gamepad gamepad, double dx, double dy, double delta) {
+    const deadZoneMin = .5, deadZoneMax = 1; // Dead zone values
+    const speed = 250;
+    if (dx.abs() < deadZoneMin && dy.abs() < deadZoneMin) return;
+    final offsetX = deadZoneMax * dx.abs() + deadZoneMin * (1 - dx.abs()); // Normalize the value
+    final offsetY = deadZoneMax * dy.abs() + deadZoneMin * (1 - dy.abs()); // Normalize the value
+    if (offsetX == 0 && offsetY == 0) return;
+    final e = UserMouseEvent(
+      position: g.Offset.zero,
+      delta: g.Offset(
+        -1 * offsetX * speed * delta * dx.sign, // Delta X
+        -1 * offsetY * speed * delta * dy.sign, // Delta Y
+      ),
+      primary: false,
+      secondary: false,
+      middle: true, // Move it as a middle button
+    );
+    _emitGamepadEvent(e);
+  }
+
+  @override
+  void _internalUpdate(double delta) {
+    super._internalUpdate(delta);
+    // Gamepad controls
+    final gamepads = window.navigator.getGamepads().toDart;
+    if (gamepads.isEmpty) return;
+    for (final gamepad in gamepads) {
+      if (gamepad == null) continue; // Skip null gamepads
+      if (!gamepad.connected) continue; // Skip disconnected gamepads
+      final axes = gamepad.axes;
+      // Left stick
+      _stickHandler(gamepad, axes[0].toDartDouble, axes[1].toDartDouble, delta);
+      // Right stick
+      _stickHandler(gamepad, axes[2].toDartDouble, axes[3].toDartDouble, delta);
+    }
   }
 }
