@@ -8,6 +8,7 @@ import 'package:l/l.dart';
 import 'package:roadmap/src/core/atlas_painter.dart';
 import 'package:roadmap/src/core/engine.dart';
 import 'package:roadmap/src/core/quadtree.dart';
+import 'package:roadmap/src/core/user_event.dart';
 import 'package:shared/shared.dart';
 import 'package:web/web.dart';
 
@@ -25,8 +26,37 @@ class SkillsLayer implements Layer {
   @override
   bool hitTest(_) => true;
 
+  /// Event handler for release mode
+  bool _onEventRelease(RenderContext context, UserEvent event) {
+    if (event is UserClickEvent) {
+      final camera = context.camera;
+      final global = camera.globalToLocal(event.position.dx, event.position.dy);
+      // TODO(plugfox): QuadTree hit test
+      // Mike Matiunin <plugfox@gmail.com>, 10 February 2025
+      l.d('Click at $global');
+      return false;
+    }
+    return false;
+  }
+
+  /// Debug event handler
+  bool _onEventDebug(RenderContext context, UserEvent event) {
+    if (!kDebugMode) return false;
+    switch (event) {
+      case UserClickEvent event:
+        return false;
+      case UserMouseEvent event:
+        return false;
+      case UserZoomEvent event:
+        return false;
+      case UserKeyEvent event:
+        return false;
+    }
+  }
+
   @override
-  bool onEvent(_, __) => false;
+  bool onEvent(RenderContext context, UserEvent event) =>
+      _onEventRelease(context, event) | _onEventDebug(context, event);
 
   @override
   void mount(RenderContext context) {
